@@ -6,19 +6,52 @@
 <div class="space-y-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 border border-slate-800 rounded-xl p-5">
         <div>
-            <h1 class="text-xl font-black text-white uppercase tracking-wide">Catalogue des Joueurs ({{ players|length }})</h1>
+            <h1 class="text-xl font-black text-white uppercase tracking-wide">
+                Catalogue des Joueurs ({{ total_count|default(players|length) }})
+            </h1>
             <p class="text-xs text-slate-400 mt-1">
-                Données synchronisées avec le schéma SoFIFA / Kaggle FC 26 (
-                <a href="https://www.kaggle.com/datasets/rovnez/fc-26-fifa-26-player-data/data" target="_blank" class="text-amber-400 hover:underline">Lien Kaggle</a>
-                ).
+                Base SQLite synchronisée avec le dataset SoFIFA / Kaggle FC 26
+                (Page {{ page|default(1) }} sur {{ total_pages|default(1) }}).
             </p>
         </div>
-        <a href="{{ url_for('home.index') }}" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase rounded-lg transition">
-            ← Retour au Comparateur
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('home.index') }}" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase rounded-lg transition">
+                ← Retour au Comparateur
+            </a>
+        </div>
     </div>
 
-    <!-- Grille des cartes -->
+    <!-- Barre de Recherche & Filtrage SQL -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <form method="GET" action="{{ url_for('home.players_list') }}" class="flex flex-col sm:flex-row gap-3 items-center">
+            <div class="relative flex-1 w-full">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search|default('') }}"
+                    placeholder="Rechercher par nom, prénom ou club (requête SQL LIKE)..."
+                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"
+                />
+            </div>
+            <div class="w-full sm:w-auto">
+                <select name="pos" class="w-full sm:w-auto bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                    {% for p_code in positions|default(['ALL']) %}
+                    <option value="{{ p_code }}" {% if position == p_code %}selected{% endif %}>{{ p_code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="w-full sm:w-auto px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs rounded-lg transition">
+                Filtrer
+            </button>
+            {% if search or (position and position != 'ALL') %}
+            <a href="{{ url_for('home.players_list') }}" class="w-full sm:w-auto text-center px-3 py-2 text-xs text-slate-400 hover:text-white transition">
+                Réinitialiser
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Grille des cartes de joueurs -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {% for p in players %}
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-amber-500/50 transition flex flex-col justify-between">
@@ -40,10 +73,11 @@
                     <div>Club : <strong class="text-slate-300">{{ p.club }}</strong></div>
                     <div>Ligue : <span class="text-slate-300">{{ p.league }}</span></div>
                     <div>Nation : <span class="text-slate-300">{{ p.nationality }}</span></div>
+                    <div>Mauvais pied : <span class="text-amber-400">{{ "★" * p.weak_foot }}{{ "☆" * (5 - p.weak_foot) }}</span></div>
                 </div>
             </div>
 
-            <!-- 6 stats -->
+            <!-- 6 stats fondamentales -->
             <div class="mt-4 pt-3 border-t border-slate-800 grid grid-cols-6 gap-1 text-center font-mono text-[10px]">
                 <div class="bg-slate-950 p-1 rounded"><span class="text-slate-500 block">PAC</span><span class="font-bold text-white">{{ p.pace }}</span></div>
                 <div class="bg-slate-950 p-1 rounded"><span class="text-slate-500 block">SHO</span><span class="font-bold text-white">{{ p.shooting }}</span></div>
@@ -53,7 +87,38 @@
                 <div class="bg-slate-950 p-1 rounded"><span class="text-slate-500 block">PHY</span><span class="font-bold text-white">{{ p.physic }}</span></div>
             </div>
         </div>
+        {% else %}
+        <div class="col-span-full py-12 text-center text-slate-500 bg-slate-900 rounded-xl border border-slate-800">
+            Aucun joueur trouvé pour ces critères de recherche.
+        </div>
         {% endfor %}
     </div>
+
+    <!-- Pagination -->
+    {% if total_pages and total_pages > 1 %}
+    <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs">
+        <div>
+            {% if page > 1 %}
+            <a href="{{ url_for('home.players_list', page=page-1, q=search, pos=position) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition">
+                ← Précédent
+            </a>
+            {% else %}
+            <span class="px-3 py-1.5 bg-slate-950 text-slate-600 rounded-lg cursor-not-allowed">← Précédent</span>
+            {% endif %}
+        </div>
+        <div class="text-slate-400">
+            Page <span class="text-white font-bold">{{ page }}</span> sur <span class="text-white font-bold">{{ total_pages }}</span>
+        </div>
+        <div>
+            {% if page < total_pages %}
+            <a href="{{ url_for('home.players_list', page=page+1, q=search, pos=position) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition">
+                Suivant →
+            </a>
+            {% else %}
+            <span class="px-3 py-1.5 bg-slate-950 text-slate-600 rounded-lg cursor-not-allowed">Suivant →</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

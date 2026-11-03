@@ -8,11 +8,24 @@ api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
 @api_bp.route("/players", methods=["GET"])
 def get_players():
-    """Retourne la liste des joueurs disponibles."""
-    players = player_repository.get_all()
+    """
+    Retourne la liste des joueurs disponibles avec support des filtres SQL
+    (limit, offset, position, search).
+    """
+    limit = request.args.get("limit", 100, type=int)
+    offset = request.args.get("offset", 0, type=int)
+    position = request.args.get("position")
+    search = request.args.get("search")
+
+    total = player_repository.count(position=position, search=search)
+    players = player_repository.find_all(limit=limit, offset=offset, position=position, search=search)
+
     return jsonify({
         "status": "success",
+        "total": total,
         "count": len(players),
+        "limit": limit,
+        "offset": offset,
         "data": [p.to_dict() for p in players]
     }), 200
 

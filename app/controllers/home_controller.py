@@ -1,3 +1,4 @@
+import math
 from flask import Blueprint, render_template, request
 from app.models.player_model import PlayerFilter
 from app.services.player_repository import player_repository
@@ -64,8 +65,28 @@ def index():
 
 @home_bp.route("/players")
 def players_list():
-    players = player_repository.get_all()
-    return render_template("players.html", players=players)
+    page = request.args.get("page", 1, type=int)
+    search = request.args.get("q", "").strip()
+    position = request.args.get("pos", "ALL").strip()
+    per_page = 48
+    offset = (page - 1) * per_page
+
+    total_count = player_repository.count(position=position, search=search)
+    players = player_repository.find_all(limit=per_page, offset=offset, position=position, search=search)
+    total_pages = max(1, math.ceil(total_count / per_page))
+
+    positions = ["ALL", "BU", "AG", "AD", "MOC", "MC", "MDC", "DC", "DG", "DD", "G"]
+
+    return render_template(
+        "players.html",
+        players=players,
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+        search=search,
+        position=position,
+        positions=positions
+    )
 
 @home_bp.route("/about")
 def about():

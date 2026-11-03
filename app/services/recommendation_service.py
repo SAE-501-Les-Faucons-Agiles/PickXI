@@ -5,16 +5,26 @@ from app.models.player_model import (
     PlayerFilter,
     RankedPlayer,
     PerformanceMetrics,
-    RecommendationResult
+    RecommendationResult,
+    POSITION_EQUIVALENTS
 )
 from app.services.player_repository import player_repository
 from app.services.metrics_service import metrics_service
+
+
+def _match_position(p: Player, filter_pos: str) -> bool:
+    """Vérifie si le joueur correspond au poste ciblé (gestion des alias FR/EN)."""
+    if not filter_pos or filter_pos == "ALL":
+        return True
+    targets = POSITION_EQUIVALENTS.get(filter_pos.upper(), [filter_pos.upper()])
+    return any(t == p.position or t in p.positions for t in targets)
+
 
 class VectorCosineRecommender:
     """
     Approche 1 : Modèle d'Espace Vectoriel & Distance Cosinus
     Projette chaque joueur dans un espace à 7 dimensions (PAC, SHO, PAS, DRI, DEF, PHY, WF).
-    Calcule la similarité cosinus avec le vecteur de statistiques souhaité par le joueur.
+    Calcule la similarité cosinus avec le vecteur de statistiques souhaité par le recruteur.
     Complexité : O(N * D)
     """
 
@@ -45,10 +55,10 @@ class VectorCosineRecommender:
             if p.weak_foot < player_filter.min_weak_foot:
                 continue
             # Filtre de poste
-            if player_filter.position != "ALL" and player_filter.position not in p.positions and player_filter.position != p.position:
+            if not _match_position(p, player_filter.position):
                 continue
 
-            # Vecteur normalisé du joueur
+            # Vecteur normalisé du joueur (caractéristiques sur 99)
             p_vector = [
                 p.pace / 99.0,
                 p.shooting / 99.0,
@@ -64,7 +74,7 @@ class VectorCosineRecommender:
             dot_product = sum(u * v for u, v in zip(user_vector, p_vector))
             cosine_sim = dot_product / (norm_user * norm_p)
 
-            # Collectif indicatif (sans peser sur la décision géométrique)
+            # Collectif indicatif (sans altérer le score géométrique pur)
             chem = 0
             if player_filter.target_club and p.club == player_filter.target_club:
                 chem += 3
@@ -107,7 +117,7 @@ class ChemistryGraphRecommender:
                 continue
             if p.weak_foot < player_filter.min_weak_foot:
                 continue
-            if player_filter.position != "ALL" and player_filter.position not in p.positions and player_filter.position != p.position:
+            if not _match_position(p, player_filter.position):
                 continue
 
             # Calcul des liens de graphe (Chemistry / Synergie)
@@ -122,7 +132,7 @@ class ChemistryGraphRecommender:
             norm_chem = min(1.0, chem / 6.0)
             norm_ovr = p.overall / 99.0
 
-            # Heuristique valeur économique : valorise les joueurs très forts à prix accessible
+            # Heuristique valeur économique : valorise les joueurs forts à prix accessible
             price_log = math.log10(max(p.price, 1000))
             max_log = math.log10(max_price_ref * 1.5)
             value_ratio = max(0.0, 1.0 - (price_log / max_log))
@@ -139,7 +149,7 @@ class ChemistryGraphRecommender:
                 match_percentage=min(100, max(10, match_pct))
             ))
 
-        # Tri décroissant par score heuristique
+        # Tri décroissant par score composite
         candidates.sort(key=lambda x: x.score, reverse=True)
         return candidates[:limit]
 
@@ -147,7 +157,8 @@ class ChemistryGraphRecommender:
 class RecommendationService:
     """
     Orchestrateur de recommandation comparative pour FUTScout.
-    Exécute les deux approches et consigne les métriques pour les enseignants évaluateurs.
+    Exécute les deux approches algorithmiques sur les candidats issus de la base SQLite
+    et consigne les métriques comparatives (temps, complexité, impact énergétique).
     """
 
     def __init__(self):
@@ -157,13 +168,18 @@ class RecommendationService:
         return self.repository.get_all()
 
     def run_comparison(self, player_filter: PlayerFilter, limit: int = 6) -> Dict[str, Any]:
-        all_players = self.repository.get_all()
+        # Requête SQL ciblée pour extraire les candidats éligibles
+        candidates = self.repository.get_candidates(player_filter)
+
+        # Si aucun candidat avec les filtres stricts, bascule sur les joueurs généraux pour ne pas bloquer l'UI
+        if not candidates:
+            candidates = self.repository.get_all(limit=100)
 
         # 1. Approche Vectorielle (Cosinus)
         res_vec, last_vec, min_vec, max_vec, avg_vec, mem_vec = metrics_service.measure_execution(
             VectorCosineRecommender.recommend,
             "vector_cosine",
-            all_players,
+            candidates,
             player_filter,
             limit=limit,
             iterations=10
@@ -194,7 +210,7 @@ class RecommendationService:
         res_chem, last_chem, min_chem, max_chem, avg_chem, mem_chem = metrics_service.measure_execution(
             ChemistryGraphRecommender.recommend,
             "chemistry_graph",
-            all_players,
+            candidates,
             player_filter,
             limit=limit,
             iterations=10
@@ -225,7 +241,8 @@ class RecommendationService:
             "filter": player_filter,
             "vector_cosine": result_vec,
             "chemistry_graph": result_chem,
-            "total_candidates": len(all_players)
+            "total_candidates": len(candidates)
         }
+
 
 recommendation_service = RecommendationService()
