@@ -1,5 +1,5 @@
 # SAE-501
-Groupe : Les faucons agiles 
+Groupe : Les faucons agiles
 
 Membres :
 - Redwan DJEDIA
@@ -8,4 +8,3 @@ Membres :
 - Jasper PETIT
 - Issam KHADROUF
 - Riyad LAROUB
-
