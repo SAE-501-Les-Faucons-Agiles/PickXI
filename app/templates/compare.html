@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Comparateur - Villetaneuse Corp{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Formulaire de sélection d'item -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <form method="POST" action="{{ url_for('home.compare') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-2">
+                <label for="item_id" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                    Élément cible à recommander
+                </label>
+                <select name="item_id" id="item_id" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    {% for item in items %}
+                    <option value="{{ item.id }}" {% if item.id == selected_id %}selected{% endif %}>
+                        #{{ item.id }} - {{ item.title }} ({{ item.category }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="limit" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                    Nombre de résultats (Top K)
+                </label>
+                <select name="limit" id="limit" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="3" {% if limit == 3 %}selected{% endif %}>Top 3</option>
+                    <option value="4" {% if limit == 4 %}selected{% endif %}>Top 4</option>
+                    <option value="5" {% if limit == 5 %}selected{% endif %}>Top 5</option>
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm shadow transition">
+                    Comparer les 2 approches
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Élément de référence sélectionné -->
+    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 bg-indigo-600 text-white text-xs font-bold rounded">Élément de référence</span>
+                <span class="text-xs text-indigo-700 font-semibold">{{ target_item.category }}</span>
+            </div>
+            <h2 class="text-xl font-bold text-indigo-950 mt-1">{{ target_item.title }}</h2>
+            <p class="text-xs text-indigo-800 mt-1">{{ target_item.description }}</p>
+            <div class="flex flex-wrap gap-1 mt-2">
+                {% for tag in target_item.tags %}
+                <span class="text-[10px] bg-white text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">#{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="flex items-center space-x-4 text-xs font-medium text-indigo-900 bg-white/70 p-3 rounded-lg border border-indigo-100">
+            <div>Note : <span class="font-bold text-amber-600">★ {{ target_item.rating }}</span></div>
+            <div>Popularité : <span class="font-bold">{{ target_item.popularity }}</span> vues</div>
+        </div>
+    </div>
+
+    <!-- Comparaison côte à côte des deux approches -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Colonne Approche 1 : Content-Based -->
+        <div class="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden flex flex-col">
+            <div class="bg-blue-600 text-white p-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs uppercase tracking-wider font-semibold bg-blue-800/60 px-2 py-0.5 rounded">Approche 1</span>
+                    <span class="text-xs bg-blue-500 px-2 py-0.5 rounded">{{ content_based.metrics.theoretical_complexity }}</span>
+                </div>
+                <h3 class="text-lg font-bold mt-1">{{ content_based.approach_name }}</h3>
+                <p class="text-xs text-blue-100 mt-0.5">{{ content_based.approach_description }}</p>
+            </div>
+
+            <!-- Mini Métriques en haut de colonne -->
+            <div class="bg-blue-50/50 border-b border-blue-100 p-3 grid grid-cols-3 gap-2 text-center text-xs">
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Temps moyen</span>
+                    <span class="font-bold text-blue-900">{{ content_based.metrics.time_avg_ms }} ms</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Mémoire crête</span>
+                    <span class="font-bold text-blue-900">{{ content_based.metrics.memory_usage_kb }} Ko</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Impact Batterie</span>
+                    <span class="font-bold text-emerald-700">{{ content_based.metrics.battery_impact_score }}</span>
+                </div>
+            </div>
+
+            <!-- Liste des recommandations -->
+            <div class="p-4 space-y-3 flex-grow">
+                {% for item in content_based.items %}
+                <div class="p-3 border border-slate-100 rounded-lg hover:border-blue-200 transition bg-slate-50/30">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-bold text-slate-800">#{{ loop.index }} - {{ item.title }}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-700">{{ item.category }}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ item.description }}</p>
+                    <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 text-[11px]">
+                        <div class="flex flex-wrap gap-1">
+                            {% for tag in item.tags %}
+                            <span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">#{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        <span class="text-amber-600 font-semibold">★ {{ item.rating }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500">
+                <em>{{ content_based.metrics.comparison_notes }}</em>
+            </div>
+        </div>
+
+        <!-- Colonne Approche 2 : Heuristique -->
+        <div class="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden flex flex-col">
+            <div class="bg-emerald-600 text-white p-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs uppercase tracking-wider font-semibold bg-emerald-800/60 px-2 py-0.5 rounded">Approche 2</span>
+                    <span class="text-xs bg-emerald-500 px-2 py-0.5 rounded">{{ heuristic.metrics.theoretical_complexity }}</span>
+                </div>
+                <h3 class="text-lg font-bold mt-1">{{ heuristic.approach_name }}</h3>
+                <p class="text-xs text-emerald-100 mt-0.5">{{ heuristic.approach_description }}</p>
+            </div>
+
+            <!-- Mini Métriques en haut de colonne -->
+            <div class="bg-emerald-50/50 border-b border-emerald-100 p-3 grid grid-cols-3 gap-2 text-center text-xs">
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Temps moyen</span>
+                    <span class="font-bold text-emerald-900">{{ heuristic.metrics.time_avg_ms }} ms</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Mémoire crête</span>
+                    <span class="font-bold text-emerald-900">{{ heuristic.metrics.memory_usage_kb }} Ko</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Impact Batterie</span>
+                    <span class="font-bold text-emerald-700">{{ heuristic.metrics.battery_impact_score }}</span>
+                </div>
+            </div>
+
+            <!-- Liste des recommandations -->
+            <div class="p-4 space-y-3 flex-grow">
+                {% for item in heuristic.items %}
+                <div class="p-3 border border-slate-100 rounded-lg hover:border-emerald-200 transition bg-slate-50/30">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-bold text-slate-800">#{{ loop.index }} - {{ item.title }}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-700">{{ item.category }}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ item.description }}</p>
+                    <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 text-[11px]">
+                        <span class="text-slate-400">Popularité : {{ item.popularity }}</span>
+                        <span class="text-amber-600 font-semibold">★ {{ item.rating }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500">
+                <em>{{ heuristic.metrics.comparison_notes }}</em>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bannière vers Dashboard complet -->
+    <div class="bg-slate-100 rounded-xl p-6 border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+            <h4 class="font-bold text-slate-800">Besoin d'une analyse comparative approfondie ?</h4>
+            <p class="text-xs text-slate-600">Visualisez les temps d'exécution (min/max/moyenne) et la complexité sur notre tableau de bord.</p>
+        </div>
+        <a href="{{ url_for('home.dashboard') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+            Ouvrir le Dashboard Visuel →
+        </a>
+    </div>
+</div>
+{% endblock %}

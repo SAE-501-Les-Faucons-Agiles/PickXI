@@ -1,0 +1,8 @@
+/* Styles personnalisés pour Villetaneuse Corp RecoCompare */
+body {
+    scroll-behavior: smooth;
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}

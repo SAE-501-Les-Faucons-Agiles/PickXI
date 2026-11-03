@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+
+{% block title %}FUTScout 26 | Comparateur & Optimiseur d'Équipe{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Bannière / Barres de filtres FUT -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <form method="POST" action="{{ url_for('home.index') }}" class="space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                <div>
+                    <h1 class="text-xl font-black text-white tracking-wide uppercase flex items-center gap-2">
+                        <span>Filtres de Recrutement FUT</span>
+                        <span class="text-xs font-normal normal-case text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                            {{ total_candidates }} joueurs analysés
+                        </span>
+                    </h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Configurez le profil recherché pour déclencher le double calcul algorithmique.</p>
+                </div>
+                <div>
+                    <button type="submit" class="w-full md:w-auto px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
+                        <span>Lancer la Recommandation</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grille des filtres -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                <!-- Poste -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Poste ciblé</label>
+                    <select name="position" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                        {% for pos in positions %}
+                        <option value="{{ pos }}" {% if filter.position == pos %}selected{% endif %}>{{ pos }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Budget Max -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Budget Max (Crédits)</label>
+                    <select name="max_price" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                        <option value="150000" {% if filter.max_price == 150000 %}selected{% endif %}>≤ 150 000 🪙</option>
+                        <option value="500000" {% if filter.max_price == 500000 %}selected{% endif %}>≤ 500 000 🪙</option>
+                        <option value="1000000" {% if filter.max_price == 1000000 %}selected{% endif %}>≤ 1 000 000 🪙</option>
+                        <option value="3000000" {% if filter.max_price == 3000000 %}selected{% endif %}>≤ 3 000 000 🪙 (Illimité)</option>
+                    </select>
+                </div>
+
+                <!-- Mauvais Pied -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Mauvais Pied Min</label>
+                    <select name="min_weak_foot" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                        <option value="2" {% if filter.min_weak_foot == 2 %}selected{% endif %}>★★☆☆☆ (2★+)</option>
+                        <option value="3" {% if filter.min_weak_foot == 3 %}selected{% endif %}>★★★☆☆ (3★+)</option>
+                        <option value="4" {% if filter.min_weak_foot == 4 %}selected{% endif %}>★★★★☆ (4★+)</option>
+                        <option value="5" {% if filter.min_weak_foot == 5 %}selected{% endif %}>★★★★★ (5★ Pur)</option>
+                    </select>
+                </div>
+
+                <!-- Club pour Collectif -->
+                <div>
+                    <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Club (Synergie +3)</label>
+                    <select name="target_club" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:border-emerald-400 focus:outline-none">
+                        <option value="">Tous les clubs</option>
+                        {% for club in all_clubs %}
+                        <option value="{{ club }}" {% if filter.target_club == club %}selected{% endif %}>{{ club }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Championnat / Ligue -->
+                <div>
+                    <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Ligue (Synergie +2)</label>
+                    <select name="target_league" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:border-emerald-400 focus:outline-none">
+                        <option value="">Toutes les ligues</option>
+                        {% for lg in all_leagues %}
+                        <option value="{{ lg }}" {% if filter.target_league == lg %}selected{% endif %}>{{ lg }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Nationalité -->
+                <div>
+                    <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Nation (Synergie +1)</label>
+                    <select name="target_nationality" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:border-emerald-400 focus:outline-none">
+                        <option value="">Toutes les nations</option>
+                        {% for nat in all_nations %}
+                        <option value="{{ nat }}" {% if filter.target_nationality == nat %}selected{% endif %}>{{ nat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Curseurs d'importance des statistiques (Approche Vectorielle) -->
+            <div class="pt-3 border-t border-slate-800">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                    Profil Athlétique & Technique (Pondération vectorielle du profil)
+                </span>
+                <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 text-xs">
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>PAC (Vitesse)</span><span class="font-bold text-amber-400">{{ (filter.weight_pace * 100)|int }}%</span></div>
+                        <input type="range" name="w_pac" min="0.1" max="1.0" step="0.1" value="{{ filter.weight_pace }}" class="w-full accent-amber-400 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>SHO (Tir)</span><span class="font-bold text-amber-400">{{ (filter.weight_shooting * 100)|int }}%</span></div>
+                        <input type="range" name="w_sho" min="0.1" max="1.0" step="0.1" value="{{ filter.weight_shooting }}" class="w-full accent-amber-400 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>PAS (Passe)</span><span class="font-bold text-amber-400">{{ (filter.weight_passing * 100)|int }}%</span></div>
+                        <input type="range" name="w_pas" min="0.1" max="1.0" step="0.1" value="{{ filter.weight_passing }}" class="w-full accent-amber-400 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>DRI (Dribble)</span><span class="font-bold text-amber-400">{{ (filter.weight_dribbling * 100)|int }}%</span></div>
+                        <input type="range" name="w_dri" min="0.1" max="1.0" step="0.1" value="{{ filter.weight_dribbling }}" class="w-full accent-amber-400 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>DEF (Défense)</span><span class="font-bold text-amber-400">{{ (filter.weight_defending * 100)|int }}%</span></div>
+                        <input type="range" name="w_def" min="0.1" max="1.0" step="0.1" value="{{ filter.weight_defending }}" class="w-full accent-amber-400 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1"><span>PHY (Physique)</span><span class="font-bold text-amber-400">{{ (filter.weight_physic * 100)|int }}%</span></div>
+                        <input type="range" name="w_phy" min="0.1" max="1.0" step="0.1" value="{{ filter.weight_physic }}" class="w-full accent-amber-400 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Layout Split-View (Gauche : Joueurs / Droite : Métriques & Comparaison) -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+
+        <!-- ============================================== -->
+        <!-- COLONNE GAUCHE (7 COLONNES) : LISTE DES JOUEURS -->
+        <!-- ============================================== -->
+        <div class="xl:col-span-7 space-y-4">
+            
+            <!-- Onglets de sélection d'affichage -->
+            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl p-1.5 text-xs">
+                <span class="font-bold uppercase tracking-wider text-slate-300 px-3">Classement des Joueurs</span>
+                <div class="flex space-x-1" id="reco-tabs">
+                    <button type="button" onclick="switchRecoTab('vector')" id="tab-btn-vector" class="px-3 py-1.5 rounded-lg font-bold transition bg-amber-500 text-slate-950">
+                        Approche 1 : Vectoriel (Cosinus)
+                    </button>
+                    <button type="button" onclick="switchRecoTab('chem')" id="tab-btn-chem" class="px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition">
+                        Approche 2 : Graphe (Collectif)
+                    </button>
+                </div>
+            </div>
+
+            <!-- VUE 1 : Recommandations Approche Vectorielle -->
+            <div id="view-vector" class="space-y-3">
+                <div class="flex items-center justify-between text-xs text-slate-400 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                    <span>Algorithme : <strong>Similarité Vectorielle $\mathcal{O}(N \times D)$</strong></span>
+                    <span class="text-amber-400 font-mono">{{ vector_res.metrics.execution_time_ms }} ms</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {% for rp in vector_res.ranked_players %}
+                    {% set p = rp.player %}
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/50 rounded-xl p-4 transition-all shadow-md group relative overflow-hidden">
+                        <!-- Bandeau match % -->
+                        <div class="absolute top-0 right-0 bg-amber-500 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-bl-lg shadow">
+                            Adéquation {{ rp.match_percentage }}%
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <!-- Carte Badge Note/Poste style FUT -->
+                            <div class="w-14 h-16 rounded-lg bg-gradient-to-b from-amber-400 via-amber-500 to-amber-700 flex flex-col items-center justify-center text-slate-950 font-black shadow-inner flex-shrink-0">
+                                <span class="text-xl leading-none">{{ p.overall }}</span>
+                                <span class="text-xs uppercase tracking-tight">{{ p.position }}</span>
+                            </div>
+
+                            <!-- Infos Joueur -->
+                            <div class="flex-grow min-w-0">
+                                <h3 class="font-black text-sm text-white truncate group-hover:text-amber-400 transition-colors">{{ p.name }}</h3>
+                                <div class="text-[11px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                                    <span>{{ p.nationality }}</span>
+                                    <span>•</span>
+                                    <span class="text-slate-300">{{ p.club }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1 text-[11px]">
+                                    <span class="text-amber-400 font-bold font-mono">{{ "{:,}".format(p.price).replace(",", " ") }} 🪙</span>
+                                    <span class="text-slate-500">•</span>
+                                    <span class="text-slate-400">MP: <span class="text-amber-400">{{ p.weak_foot }}★</span></span>
+                                    <span class="text-slate-500">•</span>
+                                    <span class="text-slate-400">GT: <span class="text-amber-400">{{ p.skill_moves }}★</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grille des 6 stats FUT -->
+                        <div class="mt-3 pt-2.5 border-t border-slate-800/80 grid grid-cols-6 gap-1 text-center font-mono">
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">PAC</span>
+                                <span class="text-xs font-bold {% if p.pace >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.pace }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">SHO</span>
+                                <span class="text-xs font-bold {% if p.shooting >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.shooting }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">PAS</span>
+                                <span class="text-xs font-bold {% if p.passing >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.passing }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">DRI</span>
+                                <span class="text-xs font-bold {% if p.dribbling >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.dribbling }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">DEF</span>
+                                <span class="text-xs font-bold {% if p.defending >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.defending }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">PHY</span>
+                                <span class="text-xs font-bold {% if p.physic >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.physic }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- VUE 2 : Recommandations Approche Graphe (Collectif) -->
+            <div id="view-chem" class="space-y-3 hidden">
+                <div class="flex items-center justify-between text-xs text-slate-400 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                    <span>Algorithme : <strong>Graphe de Collectif & Rentabilité $\mathcal{O}(N \times C + N \log K)$</strong></span>
+                    <span class="text-emerald-400 font-mono">{{ chem_res.metrics.execution_time_ms }} ms</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {% for rp in chem_res.ranked_players %}
+                    {% set p = rp.player %}
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/50 rounded-xl p-4 transition-all shadow-md group relative overflow-hidden">
+                        <!-- Badge Collectif Synergie -->
+                        <div class="absolute top-0 right-0 bg-emerald-500 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-bl-lg shadow flex items-center gap-1">
+                            <span>Collectif +{{ rp.chemistry_points }}</span>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <!-- Badge style FUT Vert/Collectif -->
+                            <div class="w-14 h-16 rounded-lg bg-gradient-to-b from-emerald-400 via-emerald-500 to-emerald-700 flex flex-col items-center justify-center text-slate-950 font-black shadow-inner flex-shrink-0">
+                                <span class="text-xl leading-none">{{ p.overall }}</span>
+                                <span class="text-xs uppercase tracking-tight">{{ p.position }}</span>
+                            </div>
+
+                            <!-- Infos Joueur -->
+                            <div class="flex-grow min-w-0">
+                                <h3 class="font-black text-sm text-white truncate group-hover:text-emerald-400 transition-colors">{{ p.name }}</h3>
+                                <div class="text-[11px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                                    <span>{{ p.nationality }}</span>
+                                    <span>•</span>
+                                    <span class="text-slate-300">{{ p.club }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1 text-[11px]">
+                                    <span class="text-amber-400 font-bold font-mono">{{ "{:,}".format(p.price).replace(",", " ") }} 🪙</span>
+                                    <span class="text-slate-500">•</span>
+                                    <span class="text-emerald-400 font-semibold">{{ p.league }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grille des 6 stats FUT -->
+                        <div class="mt-3 pt-2.5 border-t border-slate-800/80 grid grid-cols-6 gap-1 text-center font-mono">
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">PAC</span>
+                                <span class="text-xs font-bold {% if p.pace >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.pace }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">SHO</span>
+                                <span class="text-xs font-bold {% if p.shooting >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.shooting }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">PAS</span>
+                                <span class="text-xs font-bold {% if p.passing >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.passing }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">DRI</span>
+                                <span class="text-xs font-bold {% if p.dribbling >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.dribbling }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">DEF</span>
+                                <span class="text-xs font-bold {% if p.defending >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.defending }}</span>
+                            </div>
+                            <div class="bg-slate-950/80 p-1 rounded">
+                                <span class="block text-[9px] text-slate-500 font-sans">PHY</span>
+                                <span class="text-xs font-bold {% if p.physic >= 85 %}text-emerald-400{% else %}text-white{% endif %}">{{ p.physic }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- COLONNE DROITE (5 COLONNES) : TABLEAU DE BORD  -->
+        <!-- ============================================== -->
+        <div class="xl:col-span-5 space-y-4">
+
+            <!-- Titre Dashboard (Pastushenko et al., 2021) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Pastushenko et al. Framework</span>
+                        <h2 class="text-sm font-extrabold text-white uppercase tracking-wide mt-0.5">
+                            Tableau de Bord & Performances
+                        </h2>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
+                        Temps réel
+                    </span>
+                </div>
+
+                <!-- Grille de KPIs -->
+                <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
+                    <!-- KPI 1 -->
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Temps Moyen (Vectoriel)</span>
+                        <div class="text-lg font-bold text-amber-400 font-mono mt-0.5">
+                            {{ vector_res.metrics.time_avg_ms }} <span class="text-xs text-slate-400 font-normal">ms</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500">Min: {{ vector_res.metrics.time_min_ms }}ms | Max: {{ vector_res.metrics.time_max_ms }}ms</span>
+                    </div>
+
+                    <!-- KPI 2 -->
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Temps Moyen (Graphe)</span>
+                        <div class="text-lg font-bold text-emerald-400 font-mono mt-0.5">
+                            {{ chem_res.metrics.time_avg_ms }} <span class="text-xs text-slate-400 font-normal">ms</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500">Min: {{ chem_res.metrics.time_min_ms }}ms | Max: {{ chem_res.metrics.time_max_ms }}ms</span>
+                    </div>
+
+                    <!-- KPI 3 -->
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Consommation Mémoire</span>
+                        <div class="text-base font-bold text-white font-mono mt-0.5">
+                            {{ chem_res.metrics.memory_usage_kb }} <span class="text-xs text-slate-400 font-normal">Ko</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500">Empreinte RAM minimale</span>
+                    </div>
+
+                    <!-- KPI 4 -->
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Impact Batterie</span>
+                        <div class="text-sm font-bold text-emerald-400 mt-1 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>{{ chem_res.metrics.battery_impact_score }}</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500">Évaluation Pierrick Siest</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphique 1 : Temps de réponse (Bar Chart) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Latence Comparée (ms)</h3>
+                    <span class="text-[10px] text-slate-500 font-mono">Min / Moy / Max</span>
+                </div>
+                <div class="relative h-48">
+                    <canvas id="fifaTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Graphique 2 : Profil Radar des deux approches -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Profil Statistiques Moyennes</h3>
+                    <span class="text-[10px] text-slate-500">6 Attributs FUT</span>
+                </div>
+                <div class="relative h-56">
+                    <canvas id="fifaRadarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tableau de complexité algorithmique -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl text-xs space-y-2">
+                <h3 class="font-bold uppercase tracking-wider text-slate-300 text-[11px]">
+                    Complexité Algorithmique & Scalabilité
+                </h3>
+                <div class="space-y-2 text-[11px]">
+                    <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                        <div class="flex justify-between items-center text-amber-400 font-bold mb-1">
+                            <span>1. Similarité Vectorielle</span>
+                            <span class="font-mono">{{ vector_res.metrics.theoretical_complexity }}</span>
+                        </div>
+                        <p class="text-slate-400 text-[10px] leading-relaxed">
+                            Projection directe et calcul de distance cosinus. Pas de dépendance aux graphes d'équipe. Linéaire vis-à-vis du nombre de joueurs $N$.
+                        </p>
+                    </div>
+
+                    <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                        <div class="flex justify-between items-center text-emerald-400 font-bold mb-1">
+                            <span>2. Graphe Collectif & Rentabilité</span>
+                            <span class="font-mono">{{ chem_res.metrics.theoretical_complexity }}</span>
+                        </div>
+                        <p class="text-slate-400 text-[10px] leading-relaxed">
+                            Évalue les arêtes de synergie (Club/Ligue/Nation) et effectue un tri partiel du Top $K$. Idéal pour maximiser le collectif d'équipe.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Gestion des onglets Vectoriel vs Graphe
+    function switchRecoTab(tab) {
+        const viewVec = document.getElementById('view-vector');
+        const viewChem = document.getElementById('view-chem');
+        const btnVec = document.getElementById('tab-btn-vector');
+        const btnChem = document.getElementById('tab-btn-chem');
+
+        if (tab === 'vector') {
+            viewVec.classList.remove('hidden');
+            viewChem.classList.add('hidden');
+            btnVec.className = 'px-3 py-1.5 rounded-lg font-bold transition bg-amber-500 text-slate-950';
+            btnChem.className = 'px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition';
+        } else {
+            viewVec.classList.add('hidden');
+            viewChem.classList.remove('hidden');
+            btnVec.className = 'px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition';
+            btnChem.className = 'px-3 py-1.5 rounded-lg font-bold transition bg-emerald-500 text-slate-950';
+        }
+    }
+
+    // 1. Bar Chart Latence
+    const ctxTime = document.getElementById('fifaTimeChart').getContext('2d');
+    new Chart(ctxTime, {
+        type: 'bar',
+        data: {
+            labels: ['Min (ms)', 'Moyenne (ms)', 'Max (ms)'],
+            datasets: [
+                {
+                    label: 'Vectoriel (Cosinus)',
+                    data: [
+                        {{ vector_res.metrics.time_min_ms }},
+                        {{ vector_res.metrics.time_avg_ms }},
+                        {{ vector_res.metrics.time_max_ms }}
+                    ],
+                    backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                    borderColor: 'rgb(245, 158, 11)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Graphe (Collectif)',
+                    data: [
+                        {{ chem_res.metrics.time_min_ms }},
+                        {{ chem_res.metrics.time_avg_ms }},
+                        {{ chem_res.metrics.time_max_ms }}
+                    ],
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderColor: 'rgb(16, 185, 129)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94a3b8', font: { size: 10 } }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(51, 65, 85, 0.4)' },
+                    ticks: { color: '#94a3b8', font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8', font: { size: 10 } }
+                }
+            }
+        }
+    });
+
+    // 2. Radar Chart
+    // Calcul des moyennes des stats pour les deux approches
+    {% set vec_pac = (vector_res.ranked_players | map(attribute='player.pace') | list) %}
+    {% set vec_sho = (vector_res.ranked_players | map(attribute='player.shooting') | list) %}
+    {% set vec_pas = (vector_res.ranked_players | map(attribute='player.passing') | list) %}
+    {% set vec_dri = (vector_res.ranked_players | map(attribute='player.dribbling') | list) %}
+    {% set vec_def = (vector_res.ranked_players | map(attribute='player.defending') | list) %}
+    {% set vec_phy = (vector_res.ranked_players | map(attribute='player.physic') | list) %}
+
+    {% set chem_pac = (chem_res.ranked_players | map(attribute='player.pace') | list) %}
+    {% set chem_sho = (chem_res.ranked_players | map(attribute='player.shooting') | list) %}
+    {% set chem_pas = (chem_res.ranked_players | map(attribute='player.passing') | list) %}
+    {% set chem_dri = (chem_res.ranked_players | map(attribute='player.dribbling') | list) %}
+    {% set chem_def = (chem_res.ranked_players | map(attribute='player.defending') | list) %}
+    {% set chem_phy = (chem_res.ranked_players | map(attribute='player.physic') | list) %}
+
+    const ctxRadar = document.getElementById('fifaRadarChart').getContext('2d');
+    new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+            labels: ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY'],
+            datasets: [
+                {
+                    label: 'Profil Vectoriel',
+                    data: [
+                        {{ (vec_pac | sum / (vec_pac | length or 1)) | round(1) }},
+                        {{ (vec_sho | sum / (vec_sho | length or 1)) | round(1) }},
+                        {{ (vec_pas | sum / (vec_pas | length or 1)) | round(1) }},
+                        {{ (vec_dri | sum / (vec_dri | length or 1)) | round(1) }},
+                        {{ (vec_def | sum / (vec_def | length or 1)) | round(1) }},
+                        {{ (vec_phy | sum / (vec_phy | length or 1)) | round(1) }}
+                    ],
+                    backgroundColor: 'rgba(245, 158, 11, 0.25)',
+                    borderColor: 'rgb(245, 158, 11)',
+                    pointBackgroundColor: 'rgb(245, 158, 11)'
+                },
+                {
+                    label: 'Profil Graphe Collectif',
+                    data: [
+                        {{ (chem_pac | sum / (chem_pac | length or 1)) | round(1) }},
+                        {{ (chem_sho | sum / (chem_sho | length or 1)) | round(1) }},
+                        {{ (chem_pas | sum / (chem_pas | length or 1)) | round(1) }},
+                        {{ (chem_dri | sum / (chem_dri | length or 1)) | round(1) }},
+                        {{ (chem_def | sum / (chem_def | length or 1)) | round(1) }},
+                        {{ (chem_phy | sum / (chem_phy | length or 1)) | round(1) }}
+                    ],
+                    backgroundColor: 'rgba(16, 185, 129, 0.25)',
+                    borderColor: 'rgb(16, 185, 129)',
+                    pointBackgroundColor: 'rgb(16, 185, 129)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94a3b8', font: { size: 10 } }
+                }
+            },
+            scales: {
+                r: {
+                    suggestedMin: 40,
+                    suggestedMax: 99,
+                    grid: { color: 'rgba(51, 65, 85, 0.5)' },
+                    angleLines: { color: 'rgba(51, 65, 85, 0.5)' },
+                    pointLabels: { color: '#cbd5e1', font: { size: 11, weight: 'bold' } },
+                    ticks: { display: false }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

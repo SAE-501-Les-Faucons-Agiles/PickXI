@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Architecture & Spécifications - FUTScout 26{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="border-b border-slate-800 pb-4">
+        <h1 class="text-2xl font-black text-white uppercase tracking-wide">Architecture & Documentation</h1>
+        <p class="text-xs text-slate-400 mt-1">Spécifications techniques pour la SAÉ BUT3 5.Real.01 (IUT de Villetaneuse).</p>
+    </div>
+
+    <!-- Respect de l'architecture MVC -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+        <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+            <span>Architecture MVC Découplée</span>
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                <span class="font-bold text-white block mb-1">Modèles (M)</span>
+                <p class="text-slate-400 text-[11px]"><code>app/models/player_model.py</code> : Définition des structures <code>Player</code>, <code>PlayerFilter</code>, <code>RankedPlayer</code> et <code>PerformanceMetrics</code>.</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                <span class="font-bold text-white block mb-1">Vues (V)</span>
+                <p class="text-slate-400 text-[11px]">Templates Jinja2 dans <code>app/templates/</code> avec layout split-view (joueurs à gauche, tableau de bord des métriques à droite).</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                <span class="font-bold text-white block mb-1">Contrôleurs (C)</span>
+                <p class="text-slate-400 text-[11px]"><code>app/controllers/</code> : Contrôleur web <code>home_controller.py</code> et contrôleur API REST <code>api_controller.py</code>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Les 2 approches algorithmiques -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Les Deux Approches Algorithmiques</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-amber-400">1. Similarité Vectorielle</span>
+                    <span class="font-mono text-slate-400">O(N * D)</span>
+                </div>
+                <p class="text-slate-400 text-[11px] leading-relaxed">
+                    Projette les statistiques de chaque joueur (PAC, SHO, PAS, DRI, DEF, PHY, WF) dans un espace euclidien normalisé et calcule la distance cosinus avec le profil de recherche souhaité.
+                </p>
+            </div>
+            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-emerald-400">2. Graphe Collectif & Rentabilité</span>
+                    <span class="font-mono text-slate-400">O(N * C + N log K)</span>
+                </div>
+                <p class="text-slate-400 text-[11px] leading-relaxed">
+                    Évalue le réseau de synergie d'équipe (points de collectif club, nation, ligue) et applique une heuristique qualité/prix pour maximiser la rentabilité en crédits.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Base de données & Données Kaggle -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2 text-xs">
+        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Source des Données (Kaggle)</h2>
+        <p class="text-slate-400 leading-relaxed">
+            L'application est conçue pour exploiter le dataset Kaggle :
+            <a href="https://www.kaggle.com/datasets/rovnez/fc-26-fifa-26-player-data/data" target="_blank" class="text-amber-400 hover:underline">
+                FC 26 FIFA 26 Player Data (rovnez)
+            </a>.
+        </p>
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 font-mono text-[11px]">
+            Pour charger l'intégralité du dataset Kaggle (+18 000 joueurs) :<br>
+            Déposez simplement votre fichier CSV dans le dossier <code>data/</code> (ex: <code>data/players.csv</code>). Le dépôt le détecte et le parse automatiquement au démarrage.
+        </div>
+    </div>
+
+    <!-- Licence Open Source -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2 text-xs">
+        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Licence Open Source (MIT)</h2>
+        <p class="text-slate-400 leading-relaxed">
+            Ce projet est distribué sous la <strong>Licence MIT</strong>. Cette licence permissive favorise la réutilisation du code, simplifie le partage et assure la transparence requise par la SAÉ.
+        </p>
+    </div>
+</div>
+{% endblock %}

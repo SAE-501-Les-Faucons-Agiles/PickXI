@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FUTScout 26 | Recommandation & Optimisation de Joueurs{% endblock %}</title>
+    <!-- Tailwind CSS pour un rendu sombre & dynamique style EA FC -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fut: {
+                            dark: '#0a0f1d',
+                            card: '#12192c',
+                            cardborder: '#1f2942',
+                            gold: '#f59e0b',
+                            goldlight: '#fbbf24',
+                            green: '#10b981',
+                            greenlight: '#34d399',
+                            accent: '#6366f1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js pour le Dashboard radar et temps d'exécution -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="flex flex-col min-h-screen bg-slate-950 text-slate-100 antialiased font-sans selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- Navbar EA FC / FUTScout -->
+    <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Branding FUTScout -->
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('home.index') }}" class="flex items-center space-x-3 group">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                            FS
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-extrabold text-lg tracking-tight text-white">FUT<span class="text-amber-400">SCOUT</span></span>
+                                <span class="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30">FC 26</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 leading-none">Club Squad Optimizer & Comparateur</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="flex items-center space-x-2">
+                    <a href="{{ url_for('home.index') }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+                        Scout & Comparateur
+                    </a>
+                    <a href="{{ url_for('home.players_list') }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                        Base de Joueurs
+                    </a>
+                    <a href="{{ url_for('home.about') }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                        Architecture & Licence
+                    </a>
+                </nav>
+
+                <!-- Status API & SemVer -->
+                <div class="hidden md:flex items-center space-x-3 text-xs">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                        Collectif Prêt
+                    </span>
+                    <a href="/api/v1/players" target="_blank" class="text-[11px] font-mono text-slate-400 hover:text-amber-400 transition">
+                        API JSON
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu Principal -->
+    <main class="flex-grow max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer sobre & crédits -->
+    <footer class="bg-slate-900 border-t border-slate-800 text-slate-500 text-xs py-5">
+        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-3">
+            <p>© 2026 FUTScout — Villetaneuse Corp • SAÉ BUT3 5.Real.01 (Développement avancé)</p>
+            <div class="flex items-center space-x-4">
+                <span>Architecture <strong>MVC Découplé</strong></span>
+                <span>•</span>
+                <span>Données inspirées <strong>EA Sports FC 26 / SoFIFA</strong></span>
+                <span>•</span>
+                <a href="https://opensource.org/licenses/MIT" target="_blank" class="text-amber-400 hover:underline">Licence MIT</a>
+            </div>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
