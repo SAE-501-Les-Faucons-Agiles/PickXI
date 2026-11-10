@@ -1,0 +1,13 @@
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+database/*.db
+database/*.db-journal
+database/*.db-wal
+database/*.db-shm
+
+data/*.csv
+data/transfermarkt/*.csv
