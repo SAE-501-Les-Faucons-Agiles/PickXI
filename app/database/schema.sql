@@ -171,12 +171,17 @@ ON players(birth_date);
 CREATE INDEX IF NOT EXISTS ix_tm_players_birth
 ON tm_players(birth_date);
 
+
 -- Vue destinée aux futurs algorithmes
-CREATE VIEW IF NOT EXISTS v_recommendations AS
+
+DROP VIEW IF EXISTS v_recommendations;
+
+CREATE VIEW v_recommendations AS
 SELECT
     p.sofifa_id,
     p.name,
     p.birth_date,
+    co.name AS nationality,
     ge.code AS edition,
     c.name AS club,
     pe.overall,
@@ -207,14 +212,24 @@ SELECT
 
 FROM player_editions pe
 
-JOIN players p ON p.id = pe.player_id
-JOIN game_editions ge ON ge.id = pe.edition_id
+JOIN players p
+    ON p.id = pe.player_id
 
-LEFT JOIN clubs c ON c.id = pe.club_id
+JOIN game_editions ge
+    ON ge.id = pe.edition_id
+
+LEFT JOIN countries co
+    ON co.id = p.country_id
+
+LEFT JOIN clubs c
+    ON c.id = pe.club_id
+
 LEFT JOIN player_stats s
     ON s.player_edition_id = pe.id
 
-LEFT JOIN player_links l ON l.player_id = p.id
+LEFT JOIN player_links l
+    ON l.player_id = p.id
+
 LEFT JOIN tm_players tm
     ON tm.tm_player_id = l.tm_player_id
 
