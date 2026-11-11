@@ -1,0 +1,94 @@
+{% macro render_fut_card(player, custom_class="") %}
+<div class="fut-card {% if player.overall >= 88 %}card-meta{% endif %} {{ custom_class }}" data-player-id="{{ player.sofifa_id }}">
+  
+  <!-- En-tête : Note, Poste, Nation & Photo -->
+  <div class="fut-card-header">
+    <div class="fut-card-badge">
+      <div class="fut-rating">{{ player.overall }}</div>
+      <div class="fut-position">{{ player.position }}</div>
+      <div class="fut-meta-icons">
+        <span class="fut-nation-flag" title="{{ player.nationality }}">{{ player.nationality[:3]|upper }}</span>
+        <span class="fut-club-pill" title="{{ player.club }}">{{ player.club }}</span>
+      </div>
+    </div>
+    <div class="fut-player-visual">
+      <img src="{{ player.face_url or 'https://cdn.sofifa.net/players/' ~ ('%06d' % player.sofifa_id)[:3] ~ '/' ~ ('%06d' % player.sofifa_id)[3:] ~ '/26_120.png' }}" 
+           alt="{{ player.name }}" 
+           loading="lazy" 
+           onerror="this.src='{{ url_for('static', filename='img/logo.png') }}'">
+    </div>
+  </div>
+
+  <!-- Nom du Joueur -->
+  <div class="fut-player-name" title="{{ player.name }}">{{ player.name }}</div>
+
+  <!-- Grille des 6 Stats Officielles -->
+  <div class="fut-stats-grid">
+    <div class="fut-stat-item">
+      <span class="fut-stat-value {% if player.pace >= 90 %}elite{% elif player.pace >= 85 %}high{% endif %}">{{ player.pace }}</span>
+      <span class="fut-stat-label">PAC</span>
+    </div>
+    <div class="fut-stat-item">
+      <span class="fut-stat-value {% if player.dribbling >= 90 %}elite{% elif player.dribbling >= 85 %}high{% endif %}">{{ player.dribbling }}</span>
+      <span class="fut-stat-label">DRI</span>
+    </div>
+    <div class="fut-stat-item">
+      <span class="fut-stat-value {% if player.shooting >= 90 %}elite{% elif player.shooting >= 85 %}high{% endif %}">{{ player.shooting }}</span>
+      <span class="fut-stat-label">SHO</span>
+    </div>
+    <div class="fut-stat-item">
+      <span class="fut-stat-value {% if player.defending >= 90 %}elite{% elif player.defending >= 85 %}high{% endif %}">{{ player.defending }}</span>
+      <span class="fut-stat-label">DEF</span>
+    </div>
+    <div class="fut-stat-item">
+      <span class="fut-stat-value {% if player.passing >= 90 %}elite{% elif player.passing >= 85 %}high{% endif %}">{{ player.passing }}</span>
+      <span class="fut-stat-label">PAS</span>
+    </div>
+    <div class="fut-stat-item">
+      <span class="fut-stat-value {% if player.physicality >= 90 %}elite{% elif player.physicality >= 85 %}high{% endif %}">{{ player.physicality }}</span>
+      <span class="fut-stat-label">PHY</span>
+    </div>
+  </div>
+
+  <!-- Pied de Carte : PlayStyle & Valeur Marchande -->
+  <div class="fut-card-footer">
+    <div class="fut-playstyle-badge" title="PlayStyle Méta">
+      <span class="fut-playstyle-icon"></span>
+      {% if player.playstyles and player.playstyles|length > 0 %}
+        {{ player.playstyles[0].name if player.playstyles[0].name is defined else player.playstyles[0] }}
+      {% else %}
+        Méta
+      {% endif %}
+    </div>
+    <div class="fut-price-tag">
+      {% if player.market_value_eur and player.market_value_eur > 0 %}
+        {% if player.market_value_eur >= 1000000 %}
+          {{ (player.market_value_eur / 1000000)|round(1) }}M €
+        {% else %}
+          {{ (player.market_value_eur / 1000)|round(0)|int }}k €
+        {% endif %}
+      {% else %}
+        Éco
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Actions Rapides -->
+  <div class="fut-card-actions">
+    <button type="button" class="fut-card-btn btn-quick-view" data-id="{{ player.sofifa_id }}" title="Aperçu rapide">
+      Fiche
+    </button>
+    <button type="button" class="fut-card-btn btn-action-compare" 
+            data-id="{{ player.sofifa_id }}" 
+            data-name="{{ player.name }}" 
+            data-img="{{ player.face_url or 'https://cdn.sofifa.net/players/' ~ ('%06d' % player.sofifa_id)[:3] ~ '/' ~ ('%06d' % player.sofifa_id)[3:] ~ '/26_120.png' }}" 
+            title="Comparer ce joueur">
+      Duel
+    </button>
+    <a href="/player/{{ player.sofifa_id }}" class="fut-card-btn btn-accent" title="Dossier complet">
+      Scout
+    </a>
+  </div>
+
+</div>
+{% endmacro %}

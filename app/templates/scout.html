@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% from "components/player_card.html" import render_fut_card %}
+
+{% if players is not defined %}
+  {% set players = [
+    {'sofifa_id': 252371, 'name': 'J. Bellingham', 'overall': 90, 'position': 'CAM', 'club': 'Real Madrid', 'nationality': 'Angleterre', 'pace': 80, 'shooting': 86, 'passing': 83, 'dribbling': 90, 'defending': 78, 'physicality': 85, 'market_value_eur': 174500000, 'face_url': 'https://cdn.sofifa.net/players/252/371/26_120.png', 'playstyles': [{'name': 'Relentless', 'is_plus': True}]},
+    {'sofifa_id': 239053, 'name': 'F. Valverde', 'overall': 89, 'position': 'CM', 'club': 'Real Madrid', 'nationality': 'Uruguay', 'pace': 88, 'shooting': 84, 'passing': 84, 'dribbling': 84, 'defending': 83, 'physicality': 85, 'market_value_eur': 120500000, 'face_url': 'https://cdn.sofifa.net/players/239/053/26_120.png', 'playstyles': [{'name': 'Rapid', 'is_plus': True}]},
+    {'sofifa_id': 243780, 'name': 'W. Saliba', 'overall': 87, 'position': 'CB', 'club': 'Arsenal', 'nationality': 'France', 'pace': 82, 'shooting': 40, 'passing': 72, 'dribbling': 76, 'defending': 88, 'physicality': 84, 'market_value_eur': 95000000, 'face_url': 'https://cdn.sofifa.net/players/243/780/26_120.png', 'playstyles': [{'name': 'Anticipate', 'is_plus': True}]},
+    {'sofifa_id': 235212, 'name': 'A. Hakimi', 'overall': 89, 'position': 'RB', 'club': 'Paris SG', 'nationality': 'Maroc', 'pace': 92, 'shooting': 79, 'passing': 82, 'dribbling': 83, 'defending': 82, 'physicality': 79, 'market_value_eur': 111000000, 'face_url': 'https://cdn.sofifa.net/players/235/212/26_120.png', 'playstyles': [{'name': 'Quick Step', 'is_plus': True}]},
+    {'sofifa_id': 231869, 'name': 'Rodri', 'overall': 91, 'position': 'CDM', 'club': 'Manchester City', 'nationality': 'Espagne', 'pace': 65, 'shooting': 80, 'passing': 86, 'dribbling': 84, 'defending': 87, 'physicality': 85, 'market_value_eur': 130000000, 'face_url': 'https://cdn.sofifa.net/players/231/869/26_120.png', 'playstyles': [{'name': 'Power Shot', 'is_plus': True}]},
+    {'sofifa_id': 238794, 'name': 'Vinicius Jr', 'overall': 90, 'position': 'LW', 'club': 'Real Madrid', 'nationality': 'Brésil', 'pace': 95, 'shooting': 84, 'passing': 81, 'dribbling': 91, 'defending': 29, 'physicality': 69, 'market_value_eur': 165000000, 'face_url': 'https://cdn.sofifa.net/players/238/794/26_120.png', 'playstyles': [{'name': 'Trickster', 'is_plus': True}]},
+    {'sofifa_id': 209331, 'name': 'M. Salah', 'overall': 89, 'position': 'RW', 'club': 'Liverpool', 'nationality': 'Égypte', 'pace': 89, 'shooting': 87, 'passing': 82, 'dribbling': 88, 'defending': 45, 'physicality': 76, 'market_value_eur': 78000000, 'face_url': 'https://cdn.sofifa.net/players/209/331/26_120.png', 'playstyles': [{'name': 'Finesse Shot', 'is_plus': True}]},
+    {'sofifa_id': 212831, 'name': 'Alisson', 'overall': 89, 'position': 'GK', 'club': 'Liverpool', 'nationality': 'Brésil', 'pace': 86, 'shooting': 85, 'passing': 85, 'dribbling': 89, 'defending': 54, 'physicality': 90, 'market_value_eur': 65000000, 'face_url': 'https://cdn.sofifa.net/players/212/831/26_120.png', 'playstyles': [{'name': 'Far Throw', 'is_plus': True}]}
+  ] %}
+  {% set total_count = 18405 %}
+{% endif %}
+
+{% if leagues is not defined %}
+  {% set leagues = ['Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'Saudi Pro League'] %}
+{% endif %}
+
+{% if current_filters is not defined %}
+  {% set current_filters = {} %}
+{% endif %}
+
+{% block title %}Le Scout • Moteur de Détection FC 26 | pickXI{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 40px; padding-bottom: 80px;">
+
+  <!-- En-tête de la page Recherche -->
+  <div style="margin-bottom: 28px;">
+    <h1 style="margin: 0 0 8px; font-size: clamp(1.8rem, 3.5vw, 2.6rem);">Recherche de joueurs</h1>
+    <p>Deux modes disponibles : filtre manuellement par critères ou pose directement ta question à l'assistant.</p>
+  </div>
+
+  <!-- Sélecteur de mode de recherche -->
+  <div class="search-mode-nav" style="justify-content: flex-start; margin-bottom: 28px;">
+    <button type="button" class="search-mode-btn active" data-mode="criteria">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" x2="20" y1="21" y2="21"></line>
+        <line x1="4" x2="20" y1="14" y2="14"></line>
+        <line x1="4" x2="20" y1="7" y2="7"></line>
+        <circle cx="8" cy="7" r="2"></circle>
+        <circle cx="16" cy="14" r="2"></circle>
+        <circle cx="10" cy="21" r="2"></circle>
+      </svg>
+      Filtres par critères (Base de données)
+    </button>
+
+    <button type="button" class="search-mode-btn" data-mode="chat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+      </svg>
+      Assistant IA (Discussion)
+    </button>
+  </div>
+
+  <!-- ====================================================================
+       MODE 1 : CRITÈRES & BASE DE DONNÉES
+       ==================================================================== -->
+  <div id="searchModeCriteria">
+    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 36px; align-items: start;">
+      
+      <!-- Panneau latéral de filtres -->
+      <aside style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); padding: 24px; position: sticky; top: 94px;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-faint); padding-bottom: 12px;">
+          <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; text-transform: uppercase; color: var(--accent-mint);">
+            Critères de recherche
+          </span>
+          <a href="/scout" style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-family: var(--font-display);" title="Remettre à zéro">
+            Effacer
+          </a>
+        </div>
+
+        <form action="/scout" method="GET" id="scoutFilterForm" style="display: flex; flex-direction: column; gap: 20px;">
+          
+          <!-- Recherche Texte -->
+          <div class="form-group">
+            <label class="form-label" for="filterQuery">Nom, Club ou Pays</label>
+            <input type="text" 
+                   id="filterQuery" 
+                   name="q" 
+                   class="input-control" 
+                   placeholder="Ex: Valverde, Real Madrid, France..." 
+                   value="{{ current_filters.query or '' }}">
+          </div>
+
+          <!-- Poste -->
+          <div class="form-group">
+            <label class="form-label">Poste</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              {% for pos in ["ALL", "ST", "RW", "LW", "CAM", "CM", "CDM", "CB", "LB", "RB", "GK"] %}
+                <label style="cursor: pointer;">
+                  <input type="radio" 
+                         name="pos" 
+                         value="{{ pos }}" 
+                         style="display: none;" 
+                         {% if (current_filters.position == pos) or (not current_filters.position and pos == 'ALL') %}checked{% endif %}
+                         onchange="this.form.submit()">
+                  <span class="prompt-pill {% if (current_filters.position == pos) or (not current_filters.position and pos == 'ALL') %}active{% endif %}" 
+                        style="display: inline-block; padding: 4px 10px; font-size: 0.75rem;">
+                    {{ pos }}
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Note Minimale (Slider) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Note générale min</span>
+              <span id="labelMinOvr" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.min_overall or 80 }}+
+              </span>
+            </div>
+            <input type="range" 
+                   name="min_ovr" 
+                   class="range-slider" 
+                   min="70" 
+                   max="94" 
+                   value="{{ current_filters.min_overall or 80 }}" 
+                   data-target="labelMinOvr">
+          </div>
+
+          <!-- Vitesse Minimale (Slider) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Vitesse min (PAC)</span>
+              <span id="labelMinPace" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.min_pace or 70 }}+
+              </span>
+            </div>
+            <input type="range" 
+                   name="min_pace" 
+                   class="range-slider" 
+                   min="60" 
+                   max="96" 
+                   value="{{ current_filters.min_pace or 70 }}" 
+                   data-target="labelMinPace">
+          </div>
+
+          <!-- Championnat -->
+          <div class="form-group">
+            <label class="form-label" for="filterLeague">Championnat</label>
+            <select id="filterLeague" name="league" class="select-control" onchange="this.form.submit()">
+              <option value="ALL">Tous les championnats</option>
+              {% for l in leagues %}
+                <option value="{{ l }}" {% if current_filters.league == l %}selected{% endif %}>{{ l }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- PlayStyle -->
+          <div class="form-group">
+            <label class="form-label" for="filterPlaystyle">PlayStyle</label>
+            <select id="filterPlaystyle" name="playstyle" class="select-control" onchange="this.form.submit()">
+              <option value="ALL">Tous les PlayStyles</option>
+              <option value="Anticipate" {% if current_filters.playstyle == 'Anticipate' %}selected{% endif %}>Anticipation</option>
+              <option value="Relentless" {% if current_filters.playstyle == 'Relentless' %}selected{% endif %}>Infatigable</option>
+              <option value="Quick Step" {% if current_filters.playstyle == 'Quick Step' %}selected{% endif %}>Premier Pas</option>
+              <option value="Rapid" {% if current_filters.playstyle == 'Rapid' %}selected{% endif %}>Fusée</option>
+              <option value="Finesse Shot" {% if current_filters.playstyle == 'Finesse Shot' %}selected{% endif %}>Tir Enroulé</option>
+              <option value="Power Shot" {% if current_filters.playstyle == 'Power Shot' %}selected{% endif %}>Tir Puissant</option>
+              <option value="Whipped Pass" {% if current_filters.playstyle == 'Whipped Pass' %}selected{% endif %}>Passe Traversante</option>
+              <option value="Technical" {% if current_filters.playstyle == 'Technical' %}selected{% endif %}>Technique</option>
+            </select>
+          </div>
+
+          <!-- Tri -->
+          <div class="form-group">
+            <label class="form-label" for="filterSort">Trier par</label>
+            <select id="filterSort" name="sort" class="select-control" onchange="this.form.submit()">
+              <option value="overall_desc" {% if current_filters.sort == 'overall_desc' %}selected{% endif %}>Note générale décroissante</option>
+              <option value="pace_desc" {% if current_filters.sort == 'pace_desc' %}selected{% endif %}>Vitesse décroissante</option>
+              <option value="price_asc" {% if current_filters.sort == 'price_asc' %}selected{% endif %}>Prix le plus bas d'abord</option>
+              <option value="price_desc" {% if current_filters.sort == 'price_desc' %}selected{% endif %}>Prix le plus haut d'abord</option>
+              <option value="potential_desc" {% if current_filters.sort == 'potential_desc' %}selected{% endif %}>Potentiel</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">
+            Appliquer les critères
+          </button>
+
+        </form>
+      </aside>
+
+      <!-- Zone des Cartes -->
+      <div>
+        
+        <!-- Barre de résumé -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; background: rgba(7, 47, 49, 0.5); padding: 12px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-medium);">
+          <div>
+            <span style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--accent-mint);">
+              {{ total_count or (players|length) }}
+            </span>
+            <span style="color: var(--text-secondary); font-size: 0.95rem;">
+              joueurs trouvés
+            </span>
+          </div>
+
+          <!-- Raccourcis de tri -->
+          <div style="display: flex; gap: 8px;">
+            <a href="/scout?sort=overall_desc" class="prompt-pill {% if current_filters.sort == 'overall_desc' or not current_filters.sort %}active{% endif %}">
+              Top Note
+            </a>
+            <a href="/scout?sort=pace_desc" class="prompt-pill {% if current_filters.sort == 'pace_desc' %}active{% endif %}">
+              Vitesse
+            </a>
+            <a href="/scout?sort=price_asc" class="prompt-pill {% if current_filters.sort == 'price_asc' %}active{% endif %}">
+              Prix bas
+            </a>
+          </div>
+        </div>
+
+        <!-- Grille des Cartes -->
+        {% if players and players|length > 0 %}
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; justify-items: center;">
+            {% for p in players %}
+              {{ render_fut_card(p) }}
+            {% endfor %}
+          </div>
+
+          <!-- Pagination -->
+          {% if total_pages and total_pages > 1 %}
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 50px;">
+              {% if page > 1 %}
+                <a href="/scout?page={{ page - 1 }}&q={{ current_filters.query or '' }}&pos={{ current_filters.position or '' }}&sort={{ current_filters.sort or '' }}" class="btn btn-secondary btn-sm">
+                  ← Précédent
+                </a>
+              {% endif %}
+
+              <span style="font-family: var(--font-display); font-size: 0.9rem; color: var(--text-secondary); padding: 0 12px;">
+                Page <strong style="color: var(--accent-mint);">{{ page }}</strong> sur {{ total_pages }}
+              </span>
+
+              {% if page < total_pages %}
+                <a href="/scout?page={{ page + 1 }}&q={{ current_filters.query or '' }}&pos={{ current_filters.position or '' }}&sort={{ current_filters.sort or '' }}" class="btn btn-secondary btn-sm">
+                  Suivant →
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+
+        {% else %}
+          <!-- État vide sobre -->
+          <div style="padding: 60px 20px; text-align: center; background: var(--bg-surface); border: 1px dashed var(--border-medium); border-radius: var(--radius-lg);">
+            <h3 style="margin-bottom: 8px; font-size: 1.25rem;">Aucun joueur ne correspond à ces critères</h3>
+            <p style="max-width: 440px; margin: 0 auto 20px; color: var(--text-secondary); font-size: 0.92rem;">
+              Essaie d'ajuster les filtres (baisser la vitesse min ou élargir le poste) pour obtenir plus de résultats.
+            </p>
+            <a href="/scout" class="btn btn-primary btn-sm">
+              Réinitialiser les filtres
+            </a>
+          </div>
+        {% endif %}
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODE 2 : CHATBOT IA
+       ==================================================================== -->
+  <div id="searchModeChat" style="display: none; max-width: 860px; margin: 0 auto;">
+    <div class="chatbox-card">
+      
+      <div class="chatbox-header">
+        <div class="chatbox-header-title">
+          <span class="chatbox-status-dot"></span>
+          Assistant Recruteur IA
+        </div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-display);">
+          Discussion interactive
+        </span>
+      </div>
+
+      <!-- Messages -->
+      <div id="chatMessages" class="chatbox-messages">
+        <div class="chat-bubble bot">
+          Bonjour ! Décris-moi le joueur que tu recherches (son poste, les qualités que tu attends, ton budget ou le championnat). 
+          Je te propose directement les profils correspondants dans la base de données.
+        </div>
+      </div>
+
+      <!-- Suggestions rapides -->
+      <div class="chat-quick-suggestions">
+        <button type="button" class="chat-quick-btn" data-query="Je cherche un buteur rapide sous les 15M">
+          Buteur rapide sous les 15M
+        </button>
+        <button type="button" class="chat-quick-btn" data-query="Un milieu défensif costaud en Premier League">
+          Milieu défensif physique (Premier League)
+        </button>
+        <button type="button" class="chat-quick-btn" data-query="Quelle alternative pas chère à Valverde ou Bellingham ?">
+          Alternative à Valverde / Bellingham
+        </button>
+        <button type="button" class="chat-quick-btn" data-query="Un bon défenseur central solide en duel">
+          Défenseur central solide
+        </button>
+      </div>
+
+      <!-- Formulaire de saisie -->
+      <form id="chatForm" class="chatbox-input-row">
+        <input type="text" id="chatInput" class="chatbox-input" placeholder="Pose ta question (ex: Je cherche un milieu box-to-box en Liga sous 25M)..." autocomplete="off">
+        <button type="submit" class="chatbox-send-btn">Envoyer</button>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

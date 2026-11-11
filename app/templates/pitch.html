@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% from "components/player_card.html" import render_fut_card %}
+
+{% if recommended_players is not defined or not recommended_players %}
+  {% set recommended_players = [
+    {'sofifa_id': 231747, 'name': 'K. Mbappé', 'overall': 91, 'position': 'ST', 'club': 'Real Madrid', 'market_value_eur': 180000000, 'face_url': 'https://cdn.sofifa.net/players/231/747/26_120.png'},
+    {'sofifa_id': 239085, 'name': 'E. Haaland', 'overall': 91, 'position': 'ST', 'club': 'Manchester City', 'market_value_eur': 185000000, 'face_url': 'https://cdn.sofifa.net/players/239/085/26_120.png'},
+    {'sofifa_id': 252371, 'name': 'J. Bellingham', 'overall': 90, 'position': 'CAM', 'club': 'Real Madrid', 'market_value_eur': 174500000, 'face_url': 'https://cdn.sofifa.net/players/252/371/26_120.png'},
+    {'sofifa_id': 238794, 'name': 'Vinicius Jr', 'overall': 90, 'position': 'LW', 'club': 'Real Madrid', 'market_value_eur': 165000000, 'face_url': 'https://cdn.sofifa.net/players/238/794/26_120.png'}
+  ] %}
+{% endif %}
+
+{% block title %}Le Onze Tactique • PickXI | Bâtis ton équipe idéale FC 26{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 40px; padding-bottom: 80px;">
+
+  <!-- En-tête de la page Onze Tactique -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div class="badge-tag">Tableau Noir du Coach</div>
+      <h1 style="margin: 8px 0 6px; font-size: clamp(2rem, 4vw, 3rem);">Le Onze Tactique</h1>
+      <p>Sélectionne ton dispositif, clique sur un poste et laisse le recruteur dénicher le profil parfait.</p>
+    </div>
+
+    <!-- Contrôles du Dispositif & Actions -->
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-surface); padding: 6px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-medium);">
+        <label for="pitchFormationSelect" style="font-family: var(--font-display); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">
+          Dispositif :
+        </label>
+        <select id="pitchFormationSelect" class="select-control" style="padding: 4px 28px 4px 8px; font-size: 0.85rem; border: none; background-color: transparent;">
+          <option value="4-3-3">4-3-3 (Offensif)</option>
+          <option value="4-2-3-1">4-2-3-1 (Équilibré Méta)</option>
+          <option value="4-4-2">4-4-2 (Classique)</option>
+          <option value="3-5-2">3-5-2 (Pressing Agressif)</option>
+        </select>
+      </div>
+
+      <button id="pitchAutoFillBtn" class="btn btn-primary btn-sm" title="Remplir automatiquement avec les meilleures pépites">
+        ⚡ Auto-Compléter le Onze
+      </button>
+    </div>
+  </div>
+
+  <!-- Tableau de bord stats de l'équipe -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
+    <div class="pitch-stat-pill">
+      <span class="label">Note Globale d'Équipe</span>
+      <span class="val" id="squadOverallVal">-- OVR</span>
+    </div>
+    <div class="pitch-stat-pill">
+      <span class="label">Rythme & Vitesse Moyenne</span>
+      <span class="val" id="squadPaceVal">84 PAC</span>
+    </div>
+    <div class="pitch-stat-pill">
+      <span class="label">Budget Total Engagé</span>
+      <span class="val" id="squadCostVal" style="color: var(--accent-gold);">0 €</span>
+    </div>
+    <div class="pitch-stat-pill">
+      <span class="label">Affinité & Chimie Méta</span>
+      <span class="val" style="color: var(--accent-mint);">33 / 33</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start;">
+    
+    <!-- ====================================================================
+         ZONE DE LA PELOUSE TACTIQUE INTERACTIVE
+         ==================================================================== -->
+    <div class="tactical-pitch-wrapper">
+      <div id="tacticalPitchSurface" class="tactical-pitch">
+        <div class="pitch-lines">
+          <div class="pitch-center-circle"></div>
+          <div class="pitch-box-top"></div>
+          <div class="pitch-box-bottom"></div>
+        </div>
+        <!-- Les 11 slots sont positionnés dynamiquement par main.js -->
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         TIROIR LATÉRAL DES SUGGESTIONS POUR LE POSTE ACTIF
+         ==================================================================== -->
+    <aside id="pitchScoutDrawer" style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); padding: 22px;">
+      
+      <div style="margin-bottom: 18px; border-bottom: 1px solid var(--border-faint); padding-bottom: 14px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span id="pitchDrawerPosBadge" class="badge-tag">ST (Buteur)</span>
+          <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">Top 4 Choix</span>
+        </div>
+        <h3 id="pitchDrawerTitle" style="font-size: 1.15rem; margin-top: 8px;">
+          Pépites recommandées
+        </h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+          Clique sur un joueur pour l'installer directement dans ton Onze de départ.
+        </p>
+      </div>
+
+      <!-- Liste des candidats suggérés -->
+      <div id="pitchDrawerCandidates" style="display: flex; flex-direction: column; gap: 12px;">
+        {% if recommended_players %}
+          {% for p in recommended_players[:4] %}
+            <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-deep); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 10px 12px; cursor: pointer; transition: all var(--transition-fast);"
+                 onclick="assignPlayerToActiveSlot('{{ p.name }}', '{{ p.face_url }}', '{{ p.overall }}')">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ p.face_url }}" alt="{{ p.name }}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 50%; background: var(--bg-surface);" onerror="this.src='/static/img/logo.png'">
+                <div>
+                  <div style="font-family: var(--font-display); font-weight: 700; font-size: 0.92rem; color: var(--text-main);">
+                    {{ p.name }}
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    {{ p.position }} • {{ p.club }}
+                  </div>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-family: var(--font-display); font-weight: 700; color: var(--accent-mint); font-size: 1.05rem;">
+                  {{ p.overall }}
+                </div>
+                <div style="font-size: 0.72rem; color: var(--accent-gold); font-family: var(--font-mono);">
+                  {{ (p.market_value_eur / 1000000)|round(1) if p.market_value_eur else 'Éco' }}M€
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+            Sélectionne un poste sur la pelouse pour voir les profils adaptés.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Note tactique du recruteur -->
+      <div style="margin-top: 24px; padding: 14px; background: rgba(7, 47, 49, 0.6); border-radius: var(--radius-sm); border: 1px solid var(--border-faint);">
+        <div style="font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--accent-mint); margin-bottom: 4px;">
+          Conseil du Vestiaire
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+          Pour maximiser le pressing en 4-3-3, privilégie un milieu sentinelle avec <strong>Anticipation+</strong> 
+          et au moins deux ailiers au-delà de <strong>88 en accélération</strong>.
+        </p>
+      </div>
+
+    </aside>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function assignPlayerToActiveSlot(name, img, ovr) {
+  const activeSlot = document.querySelector('.pitch-slot.active') || document.querySelector('.pitch-slot');
+  if (activeSlot) {
+    const node = activeSlot.querySelector('.slot-node');
+    node.innerHTML = `<img src="${img}" alt="${name}" onerror="this.src='/static/img/logo.png'">`;
+    node.style.borderColor = "var(--accent-mint)";
+    activeSlot.querySelector('.slot-label').textContent = `${ovr} ${name}`;
+
+    // Mise à jour visuelle discrète
+    activeSlot.classList.remove('active');
+  }
+}
+</script>
+{% endblock %}
