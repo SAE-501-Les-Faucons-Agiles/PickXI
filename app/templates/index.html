@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% from "components/player_card.html" import render_fut_card %}
+
+{% block title %}pickXI • Recommandation de joueurs Ultimate Team FC 26{% endblock %}
+
+{% block content %}
+
+<!-- ========================================================================
+     HERO : CHOIX ENTRE RECHERCHE CRITÈRES (BD) OU CHATBOT IA
+     ======================================================================== -->
+<section style="padding: 50px 0 40px; position: relative;">
+  <div class="container" style="max-width: 960px;">
+    
+    <!-- En-tête simple et direct -->
+    <div style="text-align: center; margin-bottom: 28px;">
+      <div style="display: inline-flex; margin-bottom: 14px;">
+        <span class="badge-tag">
+          Base de données FC 26 • Recommandation de joueurs
+        </span>
+      </div>
+      <h1 style="margin-bottom: 12px; font-size: clamp(2rem, 4vw, 3.2rem);">
+        Trouve les bons joueurs pour ton Onze
+      </h1>
+      <p style="font-size: 1.15rem; max-width: 680px; margin: 0 auto; color: var(--text-secondary);">
+        Deux façons de chercher : par critères précis (vitesse, poste, note, budget) 
+        ou en discutant directement avec notre assistant IA.
+      </p>
+    </div>
+
+    <!-- Sélecteur des Deux Algorithmes de Recherche -->
+    <div class="search-mode-nav">
+      <button type="button" class="search-mode-btn active" data-mode="criteria">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="21" y2="21"></line>
+          <line x1="4" x2="20" y1="14" y2="14"></line>
+          <line x1="4" x2="20" y1="7" y2="7"></line>
+          <circle cx="8" cy="7" r="2"></circle>
+          <circle cx="16" cy="14" r="2"></circle>
+          <circle cx="10" cy="21" r="2"></circle>
+        </svg>
+        1. Recherche par critères (Base de données)
+      </button>
+
+      <button type="button" class="search-mode-btn" data-mode="chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+        </svg>
+        2. Assistant IA (Discussion / Chatbox)
+      </button>
+    </div>
+
+    <!-- ====================================================================
+         MODE 1 : RECHERCHE PAR CRITÈRES (BASE DE DONNÉES)
+         ==================================================================== -->
+    <div id="searchModeCriteria" style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-elevated);">
+      <form action="/scout" method="GET">
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px;">
+          
+          <!-- Poste -->
+          <div class="form-group">
+            <label class="form-label" for="homePosSelect">Poste</label>
+            <select id="homePosSelect" name="pos" class="select-control">
+              <option value="ALL">Tous les postes</option>
+              <option value="ST">Buteur (ST/BU)</option>
+              <option value="LW">Ailier Gauche (LW/AG)</option>
+              <option value="RW">Ailier Droit (RW/AD)</option>
+              <option value="CAM">Milieu Offensif (CAM/MOC)</option>
+              <option value="CM">Milieu Central (CM/MC)</option>
+              <option value="CDM">Milieu Défensif (CDM/MDC)</option>
+              <option value="CB">Défenseur Central (CB/DC)</option>
+              <option value="LB">Latéral Gauche (LB/DG)</option>
+              <option value="RB">Latéral Droit (RB/DD)</option>
+              <option value="GK">Gardien (GK/G)</option>
+            </select>
+          </div>
+
+          <!-- Note min -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Note générale min</span>
+              <span id="homeOvrVal" style="color: var(--accent-mint); font-family: var(--font-mono);">80+</span>
+            </div>
+            <input type="range" name="min_ovr" class="range-slider" min="70" max="94" value="80" data-target="homeOvrVal">
+          </div>
+
+          <!-- Vitesse min -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Vitesse min (PAC)</span>
+              <span id="homePaceVal" style="color: var(--accent-mint); font-family: var(--font-mono);">75+</span>
+            </div>
+            <input type="range" name="min_pace" class="range-slider" min="60" max="96" value="75" data-target="homePaceVal">
+          </div>
+
+          <!-- Championnat -->
+          <div class="form-group">
+            <label class="form-label" for="homeLeagueSelect">Championnat</label>
+            <select id="homeLeagueSelect" name="league" class="select-control">
+              <option value="ALL">Tous les championnats</option>
+              <option value="Premier League">Premier League</option>
+              <option value="La Liga">La Liga</option>
+              <option value="Serie A">Serie A</option>
+              <option value="Bundesliga">Bundesliga</option>
+              <option value="Ligue 1">Ligue 1</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border-top: 1px solid var(--border-faint); padding-top: 20px;">
+          <div style="font-size: 0.88rem; color: var(--text-secondary);">
+            Compare directement les critères avec les joueurs enregistrés en base.
+          </div>
+          <button type="submit" class="btn btn-primary">
+            Lancer la recherche par critères →
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ====================================================================
+         MODE 2 : ASSISTANT IA (CHATBOX INTERACTIVE)
+         ==================================================================== -->
+    <div id="searchModeChat" style="display: none;">
+      <div class="chatbox-card">
+        
+        <div class="chatbox-header">
+          <div class="chatbox-header-title">
+            <span class="chatbox-status-dot"></span>
+            Assistant Recruteur IA
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-display);">
+            Discussion en direct
+          </span>
+        </div>
+
+        <!-- Zone d'échange de messages -->
+        <div id="chatMessages" class="chatbox-messages">
+          <div class="chat-bubble bot">
+            Salut ! Dis-moi quel joueur ou profil tu cherches (poste, budget, championnat ou style de jeu). 
+            Je regarde dans la base de données pour te proposer les profils les plus adaptés.
+          </div>
+        </div>
+
+        <!-- Suggestions de questions rapides -->
+        <div class="chat-quick-suggestions">
+          <button type="button" class="chat-quick-btn" data-query="Je cherche un buteur rapide sous les 15M">
+            Buteur rapide sous les 15M
+          </button>
+          <button type="button" class="chat-quick-btn" data-query="Un milieu défensif physique en Premier League">
+            Milieu défensif physique (Premier League)
+          </button>
+          <button type="button" class="chat-quick-btn" data-query="Quelle alternative pas chère à Valverde ou Bellingham ?">
+            Alternative à Valverde / Bellingham
+          </button>
+          <button type="button" class="chat-quick-btn" data-query="Un bon défenseur central solide en duel">
+            Défenseur central solide
+          </button>
+        </div>
+
+        <!-- Saisie du message -->
+        <form id="chatForm" class="chatbox-input-row">
+          <input type="text" id="chatInput" class="chatbox-input" placeholder="Pose ta question au recruteur... (ex: Buteur rapide et agile sous 20M)" autocomplete="off">
+          <button type="submit" class="chatbox-send-btn">Envoyer</button>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- Repères chiffrés -->
+    <div style="display: flex; justify-content: center; gap: 40px; margin-top: 36px; flex-wrap: wrap; color: var(--text-muted); font-size: 0.9rem;">
+      <div><strong style="color: var(--accent-mint); font-family: var(--font-mono);">18 405</strong> joueurs en base</div>
+      <div><strong style="color: var(--text-main); font-family: var(--font-mono);">FC 26</strong> données réelles</div>
+      <div><strong style="color: var(--accent-gold); font-family: var(--font-mono);">2 modes</strong> critères ou chat IA</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========================================================================
+     JOUEURS RECOMMANDÉS DU MOMENT
+     ======================================================================== -->
+<section style="padding: 50px 0; border-top: 1px solid var(--border-faint);">
+  <div class="container">
+    
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h2 style="font-size: 1.8rem; margin-bottom: 6px;">Joueurs recommandés</h2>
+        <p>Quelques profils complets avec un bon rapport entre statistiques et prix sur le marché.</p>
+      </div>
+      <a href="/scout" class="btn btn-secondary btn-sm">
+        Voir tous les joueurs →
+      </a>
+    </div>
+
+    <!-- Grille des Cartes -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; justify-items: center;">
+      {% if curated_players %}
+        {% for p in curated_players %}
+          {{ render_fut_card(p) }}
+        {% endfor %}
+      {% else %}
+        {% set demo_picks = [
+          {'sofifa_id': 252371, 'name': 'J. Bellingham', 'overall': 90, 'position': 'CAM', 'club': 'Real Madrid', 'nationality': 'Angleterre', 'pace': 80, 'shooting': 86, 'passing': 83, 'dribbling': 90, 'defending': 78, 'physicality': 85, 'market_value_eur': 174500000, 'face_url': 'https://cdn.sofifa.net/players/252/371/26_120.png', 'playstyles': [{'name': 'Relentless', 'is_plus': True}]},
+          {'sofifa_id': 239053, 'name': 'F. Valverde', 'overall': 89, 'position': 'CM', 'club': 'Real Madrid', 'nationality': 'Uruguay', 'pace': 88, 'shooting': 84, 'passing': 84, 'dribbling': 84, 'defending': 83, 'physicality': 85, 'market_value_eur': 120500000, 'face_url': 'https://cdn.sofifa.net/players/239/053/26_120.png', 'playstyles': [{'name': 'Rapid', 'is_plus': True}]},
+          {'sofifa_id': 243780, 'name': 'W. Saliba', 'overall': 87, 'position': 'CB', 'club': 'Arsenal', 'nationality': 'France', 'pace': 82, 'shooting': 40, 'passing': 72, 'dribbling': 76, 'defending': 88, 'physicality': 84, 'market_value_eur': 95000000, 'face_url': 'https://cdn.sofifa.net/players/243/780/26_120.png', 'playstyles': [{'name': 'Anticipate', 'is_plus': True}]},
+          {'sofifa_id': 235212, 'name': 'A. Hakimi', 'overall': 89, 'position': 'RB', 'club': 'Paris SG', 'nationality': 'Maroc', 'pace': 92, 'shooting': 79, 'passing': 82, 'dribbling': 83, 'defending': 82, 'physicality': 79, 'market_value_eur': 111000000, 'face_url': 'https://cdn.sofifa.net/players/235/212/26_120.png', 'playstyles': [{'name': 'Quick Step', 'is_plus': True}]}
+        ] %}
+        {% for p in demo_picks %}
+          {{ render_fut_card(p) }}
+        {% endfor %}
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<!-- ========================================================================
+     APERÇU DU TERRAIN TACTIQUE (LE ONZE)
+     ======================================================================== -->
+<section style="padding: 60px 0; background: rgba(7, 47, 49, 0.4); border-top: 1px solid var(--border-medium); border-bottom: 1px solid var(--border-medium);">
+  <div class="container">
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+      <div>
+        <h2 style="margin-bottom: 14px; font-size: 1.9rem;">Compose ton Onze de départ</h2>
+        <p style="margin-bottom: 18px; line-height: 1.6; color: var(--text-secondary);">
+          Place tes joueurs poste par poste sur le terrain. Tu peux tester différents dispositifs 
+          (4-3-3, 4-2-3-1, 4-4-2, 3-5-2) et cliquer sur chaque poste pour voir les joueurs conseillés.
+        </p>
+        
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+          <li style="display: flex; align-items: center; gap: 8px; color: var(--text-main);">
+            <span style="color: var(--accent-mint); font-weight: 700;">✓</span>
+            Suivi de la note globale et de la vitesse moyenne de l'équipe
+          </li>
+          <li style="display: flex; align-items: center; gap: 8px; color: var(--text-main);">
+            <span style="color: var(--accent-mint); font-weight: 700;">✓</span>
+            Remplacement facile poste par poste
+          </li>
+          <li style="display: flex; align-items: center; gap: 8px; color: var(--text-main);">
+            <span style="color: var(--accent-mint); font-weight: 700;">✓</span>
+            Estimation du budget total engagé
+          </li>
+        </ul>
+
+        <div style="display: flex; gap: 12px;">
+          <a href="/pitch" class="btn btn-primary">
+            Ouvrir le terrain tactique
+          </a>
+          <a href="/compare" class="btn btn-secondary">
+            Comparer deux joueurs
+          </a>
+        </div>
+      </div>
+
+      <!-- Mini Pelouse -->
+      <div>
+        <div class="tactical-pitch-wrapper" style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: var(--accent-mint);">
+              Terrain interactif
+            </span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">
+              Clique sur un poste pour l'éditer
+            </span>
+          </div>
+
+          <div id="tacticalPitchSurface" class="tactical-pitch" style="min-height: 340px;">
+            <div class="pitch-lines">
+              <div class="pitch-center-circle"></div>
+              <div class="pitch-box-top"></div>
+              <div class="pitch-box-bottom"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========================================================================
+     COMMENT ÇA MARCHE
+     ======================================================================== -->
+<section style="padding: 60px 0;">
+  <div class="container" style="max-width: 860px;">
+    
+    <div style="text-align: center; margin-bottom: 36px;">
+      <h2 style="font-size: 1.8rem; margin-bottom: 8px;">Comment fonctionne pickXI</h2>
+      <p>Un outil simple pour trouver des profils adaptés à votre façon de jouer.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px;">
+        <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--accent-mint); margin-bottom: 6px;">01.</div>
+        <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Filtres sur la base</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+          Filtrez directement par note, poste, vitesse ou championnat pour trouver les joueurs qui rentrent dans votre budget.
+        </p>
+      </div>
+
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px;">
+        <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--accent-mint); margin-bottom: 6px;">02.</div>
+        <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Discussion IA</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+          Exprimez votre besoin en texte naturel. L'assistant comprend votre demande et vous suggère des cartes cohérentes.
+        </p>
+      </div>
+
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px;">
+        <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--accent-mint); margin-bottom: 6px;">03.</div>
+        <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Comparaison directe</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+          Mettez deux cartes face à face pour comparer leurs 6 attributs majeurs et leurs sous-statistiques détaillées.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
