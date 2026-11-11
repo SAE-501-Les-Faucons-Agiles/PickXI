@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}pickXI • Le Scout Tactique FUT FC 26{% endblock %}</title>
+  <meta name="description" content="pickXI : Moteur de recommandation de joueurs FUT basé sur la data réelle et les PlayStyles. Ne subis plus la méta, dicte-la.">
+  
+  <!-- Favicon / Logo -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+
+  <!-- Feuilles de style unifiées (#072f31) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- ========================================================================
+       EN-TÊTE DU VESTIAIRE (NAVIGATION PRINCIPALE)
+       ======================================================================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      
+      <!-- Logo Officiel & Marque -->
+      <a href="/" class="brand-group" title="pickXI - Recommandations FUT">
+        <div class="brand-logo-wrap">
+          <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo pickXI" width="34" height="34">
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">pick<span>XI</span></div>
+          <div class="brand-tagline">Méta • Data • Scout</div>
+        </div>
+      </a>
+
+      <!-- Navigation Principale -->
+      <nav class="site-nav" aria-label="Navigation principale">
+        <a href="/" class="nav-link {% if active_page == 'home' %}active{% endif %}">Accueil</a>
+        <a href="/scout" class="nav-link {% if active_page == 'scout' %}active{% endif %}">Recherche</a>
+        <a href="/pitch" class="nav-link {% if active_page == 'pitch' %}active{% endif %}">Terrain (Mon Onze)</a>
+        <a href="/compare" class="nav-link {% if active_page == 'compare' %}active{% endif %}">Comparateur</a>
+      </nav>
+
+      <!-- Action Rapide -->
+      <div class="header-actions">
+        <a href="/scout" class="btn-header-cta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+          Rechercher un joueur
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       CONTENU PRINCIPAL DE LA PAGE
+       ======================================================================== -->
+  <main id="mainContent">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ========================================================================
+       BARRE FLOTTANTE DE COMPARAISON RAPIDE
+       ======================================================================== -->
+  <div id="compareFloatingBar" class="compare-floating-bar" aria-live="polite">
+    <div style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-main);">
+      Duel en préparation :
+    </div>
+    <div id="compareBarSlots" class="compare-slots-list">
+      <!-- Rempli dynamiquement en JS -->
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <a id="compareLaunchBtn" href="/compare" class="btn btn-primary btn-sm">Lancer le Duel</a>
+      <button id="compareClearBtn" class="btn btn-icon btn-sm" title="Vider la sélection">✕</button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODALE UNIVERSELLE DE FICHE JOUEUR (QUICK-VIEW)
+       ======================================================================== -->
+  <div id="playerDetailModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-dialog">
+      <button id="modalCloseBtn" class="modal-close-btn" aria-label="Fermer la modale">✕</button>
+      <div id="modalPlayerContent">
+        <!-- Contenu injecté dynamiquement -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       PIED DE PAGE (LE MANIFESTE & CRÉDITS)
+       ======================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <!-- Colonne 1 : La Vision Humaine -->
+        <div class="footer-brand">
+          <div class="brand-group">
+            <div class="brand-logo-wrap" style="width: 38px; height: 38px;">
+              <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo pickXI" width="28" height="28">
+            </div>
+            <div class="brand-name" style="font-size: 1.25rem;">pick<span>XI</span></div>
+          </div>
+          <p class="footer-manifesto">
+            Outil d'aide à la sélection et à la recommandation de joueurs pour Ultimate Team FC 26. 
+            Recherche par critères manuels ou par discussion avec notre assistant IA.
+          </p>
+          <div class="footer-badge-lfs">
+            <span style="color: var(--accent-mint); font-size: 1.1rem;">●</span>
+            18 405 joueurs en base • Données FC 26
+          </div>
+        </div>
+
+        <!-- Colonne 2 : Outils -->
+        <div>
+          <div class="footer-title">Navigation</div>
+          <ul class="footer-links">
+            <li><a href="/scout">Recherche de joueurs</a></li>
+            <li><a href="/pitch">Terrain (Mon Onze)</a></li>
+            <li><a href="/compare">Comparateur 1 contre 1</a></li>
+          </ul>
+        </div>
+
+        <!-- Colonne 3 : Recherches courantes -->
+        <div>
+          <div class="footer-title">Exemples</div>
+          <ul class="footer-links">
+            <li><a href="/scout?pos=ST">Buteurs (ST)</a></li>
+            <li><a href="/scout?pos=CDM">Milieux défensifs (CDM)</a></li>
+            <li><a href="/scout?pos=CB">Défenseurs centraux (CB)</a></li>
+          </ul>
+        </div>
+
+        <!-- Colonne 4 : Philosophie -->
+        <div>
+          <div class="footer-title">L'Esprit pickXI</div>
+          <ul class="footer-links">
+            <li><a href="/#manifeste">Zéro Carte Sponsorisée</a></li>
+            <li><a href="/#manifeste">Data vs Hype EA</a></li>
+            <li><a href="/#manifeste">Comment ça marche</a></li>
+            <li><a href="https://github.com/SAE-501-Les-Faucons-Agiles" target="_blank" rel="noopener">Les Faucons Agiles</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Ligne Inférieure -->
+      <div class="footer-bottom">
+        <div>&copy; 2026 pickXI • Pensé & codé sur mesure pour les vrais joueurs de ballon.</div>
+        <div style="font-family: var(--font-display); font-size: 0.78rem;">
+          Code couleur unifié : <span style="color: var(--accent-mint); font-weight: 700;">#072F31</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script principal sans dépendances superflues -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

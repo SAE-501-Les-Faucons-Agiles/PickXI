@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% from "components/player_card.html" import render_fut_card %}
+
+{% if p1 is not defined or not p1 %}
+  {% set p1 = {
+    'sofifa_id': 252371,
+    'name': 'J. Bellingham',
+    'overall': 90,
+    'position': 'CAM',
+    'club': 'Real Madrid',
+    'nationality': 'Angleterre',
+    'pace': 80,
+    'shooting': 86,
+    'passing': 83,
+    'dribbling': 90,
+    'defending': 78,
+    'physicality': 85,
+    'market_value_eur': 174500000,
+    'face_url': 'https://cdn.sofifa.net/players/252/371/26_120.png',
+    'playstyles': [{'name': 'Relentless', 'is_plus': True}]
+  } %}
+{% endif %}
+
+{% if p2 is not defined or not p2 %}
+  {% set p2 = {
+    'sofifa_id': 239053,
+    'name': 'F. Valverde',
+    'overall': 89,
+    'position': 'CM',
+    'club': 'Real Madrid',
+    'nationality': 'Uruguay',
+    'pace': 88,
+    'shooting': 84,
+    'passing': 84,
+    'dribbling': 84,
+    'defending': 83,
+    'physicality': 85,
+    'market_value_eur': 120500000,
+    'face_url': 'https://cdn.sofifa.net/players/239/053/26_120.png',
+    'playstyles': [{'name': 'Rapid', 'is_plus': True}]
+  } %}
+{% endif %}
+
+{% block title %}Face-à-Face • Duel Statistique & Radar | pickXI{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 40px; padding-bottom: 80px;">
+
+  <!-- En-tête -->
+  <div style="text-align: center; max-width: 760px; margin: 0 auto 36px;">
+    <h1 style="margin: 0 0 8px; font-size: clamp(1.8rem, 3.5vw, 2.6rem);">Comparateur 1 contre 1</h1>
+    <p>Compare directement les 6 attributs majeurs et les statistiques détaillées de deux joueurs.</p>
+  </div>
+
+  {% if p1 and p2 %}
+    
+    <!-- Zone Supérieure : Cartes + Radar Central -->
+    <div style="display: grid; grid-template-columns: 280px 1fr 280px; gap: 32px; align-items: center; margin-bottom: 50px;">
+      
+      <!-- Carte Joueur 1 (Mint) -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+        <div style="font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; color: var(--accent-mint); display: flex; align-items: center; gap: 6px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-mint); display: inline-block;"></span>
+          Joueur 1
+        </div>
+        {{ render_fut_card(p1) }}
+      </div>
+
+      <!-- Radar 6 Axes Central -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-xl); padding: 24px; text-align: center; box-shadow: var(--shadow-elevated);">
+        
+        <div style="font-family: var(--font-display); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;">
+          Comparaison visuelle (Radar)
+        </div>
+
+        <!-- Radar SVG injecté par main.js -->
+        <div class="radar-chart-container" 
+             data-radar-chart="true" 
+             data-stats-1="[{{ p1.pace }}, {{ p1.shooting }}, {{ p1.passing }}, {{ p1.dribbling }}, {{ p1.defending }}, {{ p1.physicality }}]"
+             data-stats-2="[{{ p2.pace }}, {{ p2.shooting }}, {{ p2.passing }}, {{ p2.dribbling }}, {{ p2.defending }}, {{ p2.physicality }}]">
+        </div>
+
+        <!-- Légende du Duel -->
+        <div style="display: flex; justify-content: center; gap: 24px; margin-top: 16px; font-family: var(--font-display); font-size: 0.85rem; font-weight: 700;">
+          <div style="color: var(--accent-mint); display: flex; align-items: center; gap: 6px;">
+            <span style="width: 12px; height: 4px; background: var(--accent-mint); display: inline-block;"></span>
+            {{ p1.name }} ({{ p1.overall }})
+          </div>
+          <div style="color: var(--accent-gold); display: flex; align-items: center; gap: 6px;">
+            <span style="width: 12px; height: 4px; background: var(--accent-gold); display: inline-block;"></span>
+            {{ p2.name }} ({{ p2.overall }})
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Carte Joueur 2 (Gold) -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+        <div style="font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; color: var(--accent-gold); display: flex; align-items: center; gap: 6px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-gold); display: inline-block;"></span>
+          Joueur 2
+        </div>
+        {{ render_fut_card(p2) }}
+      </div>
+
+    </div>
+
+    <!-- ====================================================================
+         TABLEAU DE COMPARAISON STAT PAR STAT (DIFFS & AVANTAGES)
+         ==================================================================== -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 40px;">
+      
+      <div style="padding: 16px 24px; background: var(--bg-deep); border-bottom: 1px solid var(--border-medium); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: var(--font-display); font-weight: 700; text-transform: uppercase; color: var(--accent-mint); font-size: 0.92rem;">
+          Détail des 6 attributs majeurs
+        </span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">
+          Vert = meilleur score
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column;">
+        
+        {% set stats_list = [
+          ('Vitesse (PAC)', p1.pace, p2.pace),
+          ('Tir (SHO)', p1.shooting, p2.shooting),
+          ('Passe (PAS)', p1.passing, p2.passing),
+          ('Dribble (DRI)', p1.dribbling, p2.dribbling),
+          ('Défense (DEF)', p1.defending, p2.defending),
+          ('Physique (PHY)', p1.physicality, p2.physicality)
+        ] %}
+
+        {% for label, val1, val2 in stats_list %}
+          {% set diff = val1 - val2 %}
+          <div style="display: grid; grid-template-columns: 80px 1fr 200px 1fr 80px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border-faint); font-family: var(--font-mono);">
+            
+            <!-- Valeur Joueur 1 -->
+            <div style="font-size: 1.15rem; font-weight: 700; color: {% if diff > 0 %}var(--accent-mint){% else %}var(--text-main){% endif %};">
+              {{ val1 }}
+              {% if diff > 0 %}<span style="font-size: 0.75rem; color: var(--accent-mint);"> (+{{ diff }})</span>{% endif %}
+            </div>
+
+            <!-- Barre Joueur 1 -->
+            <div style="height: 6px; background: rgba(52, 134, 111, 0.2); border-radius: 4px; overflow: hidden; display: flex; justify-content: flex-end;">
+              <div style="width: {{ val1 }}%; background: {% if diff > 0 %}var(--accent-mint){% else %}var(--accent-pitch){% endif %}; height: 100%;"></div>
+            </div>
+
+            <!-- Intitulé Attribut -->
+            <div style="text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary);">
+              {{ label }}
+            </div>
+
+            <!-- Barre Joueur 2 -->
+            <div style="height: 6px; background: rgba(52, 134, 111, 0.2); border-radius: 4px; overflow: hidden;">
+              <div style="width: {{ val2 }}%; background: {% if diff < 0 %}var(--accent-gold){% else %}rgba(229, 184, 66, 0.5){% endif %}; height: 100%;"></div>
+            </div>
+
+            <!-- Valeur Joueur 2 -->
+            <div style="text-align: right; font-size: 1.15rem; font-weight: 700; color: {% if diff < 0 %}var(--accent-gold){% else %}var(--text-main){% endif %};">
+              {{ val2 }}
+              {% if diff < 0 %}<span style="font-size: 0.75rem; color: var(--accent-gold);"> (+{{ -diff }})</span>{% endif %}
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </div>
+
+    </div>
+
+    <!-- Synthèse simple -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); padding: 24px;">
+      <h3 style="margin-bottom: 10px; font-size: 1.2rem;">
+        Résumé de la comparaison
+      </h3>
+      <p style="color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem;">
+        {% if p1.pace > p2.pace + 3 %}
+          <strong>{{ p1.name }}</strong> a un net avantage en vitesse de pointe et en transition rapide par rapport à {{ p2.name }}.
+        {% elif p2.defending > p1.defending + 3 %}
+          <strong>{{ p2.name }}</strong> offre une meilleure assise défensive et récupère plus de ballons dans les duels que {{ p1.name }}.
+        {% else %}
+          Les deux joueurs ont un profil très proche en termes de caractéristiques globales. Le choix dépendra surtout de leur poste secondaire, de leurs PlayStyles et des liens de collectif pour votre équipe.
+        {% endif %}
+      </p>
+    </div>
+
+  {% else %}
+    
+    <!-- Sélecteur de Joueurs si aucun p1/p2 fourni -->
+    <div style="max-width: 680px; margin: 0 auto; background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-xl); padding: 40px; text-align: center;">
+      <h2 style="margin-bottom: 12px; font-size: 1.5rem;">Choisis deux joueurs à comparer</h2>
+      <p style="margin-bottom: 24px; color: var(--text-secondary);">
+        Tu peux sélectionner deux joueurs depuis la recherche ou cliquer sur « Duel » sur n'importe quelle carte.
+      </p>
+
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <a href="/scout" class="btn btn-primary">
+          Rechercher des joueurs
+        </a>
+        <a href="/compare?p1=252371&p2=239053" class="btn btn-secondary">
+          Voir un exemple (Bellingham vs Valverde)
+        </a>
+      </div>
+    </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}

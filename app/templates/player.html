@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% from "components/player_card.html" import render_fut_card %}
+
+{% if not player %}
+  {% set player = {
+    'sofifa_id': 252371,
+    'name': 'J. Bellingham',
+    'birth_date': '2003-06-29',
+    'nationality': 'Angleterre',
+    'club': 'Real Madrid',
+    'league': 'La Liga',
+    'age': 22,
+    'position': 'CAM',
+    'overall': 90,
+    'potential': 94,
+    'pace': 80,
+    'shooting': 86,
+    'passing': 83,
+    'dribbling': 90,
+    'defending': 78,
+    'physicality': 85,
+    'market_value_eur': 174500000,
+    'height_cm': 186,
+    'weight_kg': 75,
+    'skill_moves': 4,
+    'weak_foot': 4,
+    'face_url': 'https://cdn.sofifa.net/players/252/371/26_120.png',
+    'playstyles': [{'name': 'Relentless', 'is_plus': True}, {'name': 'Technical', 'is_plus': False}]
+  } %}
+{% endif %}
+
+{% block title %}{{ player.name }} ({{ player.overall }} OVR) • Fiche Joueur FC 26 | pickXI{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 40px; padding-bottom: 80px;">
+
+  <!-- Fil d'ariane -->
+  <nav style="margin-bottom: 24px; font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted);" aria-label="Fil d'ariane">
+    <a href="/" style="color: var(--text-secondary);">Accueil</a> &gt; 
+    <a href="/scout" style="color: var(--text-secondary);">Recherche</a> &gt; 
+    <span style="color: var(--accent-mint);">{{ player.name }}</span>
+  </nav>
+
+  <!-- En-tête Dossier Joueur : Carte FUT + Bio Méta -->
+  <div style="display: grid; grid-template-columns: 320px 1fr; gap: 40px; align-items: start; margin-bottom: 50px;">
+    
+    <!-- Colonne Gauche : Carte FUT Signature -->
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+      {{ render_fut_card(player) }}
+      
+      <!-- Bouton d'action Duel direct -->
+      <a href="/compare?p1={{ player.sofifa_id }}" class="btn btn-secondary btn-sm" style="width: 100%; max-width: 280px;">
+        Comparer ce joueur
+      </a>
+    </div>
+
+    <!-- Colonne Droite : Bio & Caractéristiques Méta -->
+    <div>
+      
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+        <span class="badge-tag">Fiche FC 26</span>
+        <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-gold);">
+          ID : {{ player.sofifa_id }}
+        </span>
+      </div>
+
+      <h1 style="margin-bottom: 6px; font-size: clamp(2.2rem, 4vw, 3.4rem);">{{ player.name }}</h1>
+      <p style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 24px;">
+        {{ player.club }} • {{ player.league or 'Championnat' }} • {{ player.nationality }}
+      </p>
+
+      <!-- Grille Bio & Fiche Technique -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 12px 16px;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; font-family: var(--font-display); color: var(--text-muted);">Âge</div>
+          <div style="font-family: var(--font-mono); font-weight: 700; font-size: 1.05rem; color: var(--text-main); margin-top: 2px;">
+            {{ player.age }} ans <span style="font-size: 0.8rem; color: var(--text-muted);">({{ player.birth_date }})</span>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 12px 16px;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; font-family: var(--font-display); color: var(--text-muted);">Taille & Poids</div>
+          <div style="font-family: var(--font-mono); font-weight: 700; font-size: 1.05rem; color: var(--text-main); margin-top: 2px;">
+            {{ player.height_cm or 180 }} cm • {{ player.weight_kg or 75 }} kg
+          </div>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 12px 16px;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; font-family: var(--font-display); color: var(--text-muted);">Gestes & Mauvais Pied</div>
+          <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: var(--accent-mint); margin-top: 2px;">
+            {{ player.skill_moves or 3 }}★ Gestes • {{ player.weak_foot or 3 }}★ MP
+          </div>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 12px 16px;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; font-family: var(--font-display); color: var(--text-muted);">Valeur marchande</div>
+          <div style="font-family: var(--font-mono); font-weight: 700; font-size: 1.05rem; color: var(--accent-gold); margin-top: 2px;">
+            {% if player.market_value_eur and player.market_value_eur > 0 %}
+              {{ (player.market_value_eur / 1000000)|round(1) }}M €
+            {% else %}
+              Non renseignée
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Résumé du profil -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px 24px;">
+        <div style="font-family: var(--font-display); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent-mint); margin-bottom: 6px;">
+          Profil du joueur
+        </div>
+        <p style="color: var(--text-main); line-height: 1.6; font-size: 0.95rem;">
+          {{ player.name }} est un profil complet et régulier à son poste, efficace avec le ballon et capable d'apporter de la constance sur l'ensemble d'un match.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================================================
+       SOUS-STATISTIQUES DÉTAILLÉES (CHIRURGIE DES STATS CACHÉES)
+       ======================================================================== -->
+  <section style="margin-bottom: 50px;">
+    <h2 style="margin-bottom: 20px; font-size: 1.6rem;">Sous-Statistiques Détaillées</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+      
+      <!-- Attaque & Finition -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px;">
+        <div style="font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 0.9rem; color: var(--accent-mint); margin-bottom: 14px;">
+          Attaque & Dernier Geste
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; font-family: var(--font-mono); font-size: 0.9rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Finition</span>
+            <strong style="color: var(--text-main);">{{ stats.attacking_finishing if stats else player.shooting }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Centres</span>
+            <strong style="color: var(--text-main);">{{ stats.attacking_crossing if stats else player.passing }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Passes courtes</span>
+            <strong style="color: var(--text-main);">{{ stats.attacking_short_passing if stats else player.passing }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dribble & Maîtrise -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px;">
+        <div style="font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 0.9rem; color: var(--accent-mint); margin-bottom: 14px;">
+          Technique & Mouvement
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; font-family: var(--font-mono); font-size: 0.9rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Contrôle du ballon</span>
+            <strong style="color: var(--text-main);">{{ stats.skill_ball_control if stats else player.dribbling }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Agilité</span>
+            <strong style="color: var(--text-main);">{{ stats.movement_agility if stats else player.dribbling }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Calme sous pression</span>
+            <strong style="color: var(--text-main);">{{ stats.mentality_composure if stats else 82 }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vitesse & Puissance -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 20px;">
+        <div style="font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 0.9rem; color: var(--accent-mint); margin-bottom: 14px;">
+          Physique & Débauche d'Énergie
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; font-family: var(--font-mono); font-size: 0.9rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Accélération</span>
+            <strong style="color: var(--text-main);">{{ stats.movement_acceleration if stats else player.pace }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Endurance (90 min)</span>
+            <strong style="color: var(--text-main);">{{ stats.power_stamina if stats else player.physicality }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Force à l'impact</span>
+            <strong style="color: var(--text-main);">{{ stats.power_strength if stats else player.physicality }}</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       PLAYSTYLES & CARACTÉRISTIQUES EN JEU
+       ======================================================================== -->
+  <section style="margin-bottom: 50px;">
+    <h2 style="margin-bottom: 20px; font-size: 1.6rem;">PlayStyles & Impact In-Game</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+      {% if player.playstyles and player.playstyles|length > 0 %}
+        {% for ps in player.playstyles %}
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(7, 47, 49, 0.7); border: 1px solid {% if ps.is_plus %}var(--accent-mint){% else %}var(--border-medium){% endif %}; padding: 8px 16px; border-radius: var(--radius-sm);">
+            <span style="width: 10px; height: 10px; transform: rotate(45deg); background: {% if ps.is_plus %}var(--accent-mint){% else %}var(--text-muted){% endif %};"></span>
+            <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: {% if ps.is_plus %}var(--accent-mint){% else %}var(--text-main){% endif %};">
+              {{ ps.name }}{% if ps.is_plus %} +{% endif %}
+            </span>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="color: var(--text-muted); font-size: 0.9rem;">
+          Profil équilibré sans PlayStyle spécifique enregistré.
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       JOUEURS AU PROFIL SIMILAIRE (RECOMMANDATIONS CONNEXES)
+       ======================================================================== -->
+  {% if similar_players and similar_players|length > 0 %}
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+        <div>
+          <span class="badge-tag">Alternatives Méta</span>
+          <h2 style="margin-top: 6px; font-size: 1.6rem;">Dans le même profil tactique</h2>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; justify-items: center;">
+        {% for sp in similar_players %}
+          {{ render_fut_card(sp) }}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+</div>
+{% endblock %}

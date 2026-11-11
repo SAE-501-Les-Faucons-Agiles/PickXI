@@ -1,0 +1,617 @@
+/**
+ * PickXI - Design System & Theme
+ * Direction Artistique : Senior Art Director & Indie Copywriter
+ * Code couleur unifié basé sur #072f31 (Pitch Midnight / Vert Pétrole Profond)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@500;700&display=swap');
+
+:root {
+  /* ==========================================================================
+     PALETTE COULEUR UNIFIÉE - RACINE : #072f31
+     ========================================================================== */
+  --brand-root: #072f31;               /* Couleur officielle issue du logo */
+  
+  /* Niveaux de fond (Profondeur stade nocturne) */
+  --bg-deep: #041819;                  /* Noir pétrole le plus profond */
+  --bg-base: #072f31;                  /* Fond principal du thème */
+  --bg-surface: #0a3d40;               /* Surface de carte standard */
+  --bg-surface-elevated: #0f4a4e;      /* Surface survolée / active */
+  --bg-glass: rgba(7, 47, 49, 0.85);   /* Verre tactile pour le header et modales */
+  --bg-glass-card: rgba(10, 61, 64, 0.65);
+
+  /* Lignes de terrain, bordures et accents lumineux */
+  --border-faint: rgba(52, 134, 111, 0.22);
+  --border-medium: rgba(52, 134, 111, 0.45);
+  --border-active: #44e592;            /* Ligne de craie lumineuse */
+  
+  /* Accents vert pelouse / Méta */
+  --accent-emerald: #276c5d;           /* Vert émeraude sombre (logo) */
+  --accent-pitch: #34866f;             /* Vert pelouse tactique (logo) */
+  --accent-mint: #44e592;              /* Vert fluo stade / PlayStyle+ */
+  --accent-mint-glow: rgba(68, 229, 146, 0.25);
+  --accent-gold: #e5b842;              /* Or Méta / Carte spéciale FUT */
+  --accent-gold-glow: rgba(229, 184, 66, 0.3);
+  --accent-crimson: #e04f5f;           /* Alerte / Déficit stat */
+
+  /* Typographie */
+  --text-main: #f2f8f7;                /* Blanc pur projecteur */
+  --text-secondary: #9fc1be;           /* Vert craie doux */
+  --text-muted: #5e8480;               /* Gris-vert estompé */
+  --text-dark: #041819;
+
+  /* Polices de caractères */
+  --font-display: 'Chakra Petch', 'Space Grotesk', -apple-system, sans-serif;
+  --font-heading: 'Space Grotesk', 'Chakra Petch', sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Chakra Petch', ui-monospace, SFMono-Regular, monospace;
+
+  /* Effets & Rayons */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+  
+  --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 10px 30px rgba(4, 24, 25, 0.6);
+  --shadow-glow: 0 0 25px var(--accent-mint-glow);
+  --shadow-gold-glow: 0 0 25px var(--accent-gold-glow);
+
+  /* Grille & Conteneur */
+  --container-max: 1240px;
+  --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   RESET & BASE STYLES
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(39, 108, 93, 0.35) 0%, transparent 60%),
+    radial-gradient(circle at 100% 40%, rgba(7, 47, 49, 0.4) 0%, transparent 40%),
+    linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-base) 40%, var(--bg-deep) 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  overflow-x: hidden;
+  line-height: 1.55;
+}
+
+/* Texture pelouse tactique subtile en filigrane */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ==========================================================================
+   TYPOGRAPHIE
+   ========================================================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+h1 {
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+}
+
+h3 {
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.text-mint {
+  color: var(--accent-mint);
+}
+
+.text-gold {
+  color: var(--accent-gold);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-glow {
+  text-shadow: 0 0 16px var(--accent-mint-glow);
+}
+
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(68, 229, 146, 0.12);
+  color: var(--accent-mint);
+  border: 1px solid rgba(68, 229, 146, 0.3);
+}
+
+/* ==========================================================================
+   LAYOUT & CONTAINER
+   ========================================================================== */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+main {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   NAVIGATION GLOBALE (HEADER)
+   ========================================================================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-medium);
+  transition: all var(--transition-smooth);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 74px;
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-logo-wrap {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 0 15px rgba(68, 229, 146, 0.15);
+  overflow: hidden;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.brand-logo-wrap:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-mint);
+}
+
+.brand-logo-wrap img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.brand-name span {
+  color: var(--accent-mint);
+}
+
+.brand-tagline {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--text-main);
+  background: rgba(52, 134, 111, 0.18);
+  border-color: var(--border-faint);
+}
+
+.nav-link.active {
+  color: var(--accent-mint);
+  background: rgba(68, 229, 146, 0.1);
+  border-color: rgba(68, 229, 146, 0.3);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-header-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--accent-pitch), var(--brand-root));
+  border: 1px solid var(--accent-mint);
+  color: var(--text-main);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 15px rgba(68, 229, 146, 0.18);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-header-cta:hover {
+  background: var(--accent-mint);
+  color: var(--bg-deep);
+  box-shadow: 0 0 20px var(--accent-mint);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   BOUTONS & COMMANDES TACTIQUES
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #34866f 0%, #072f31 100%);
+  border: 1px solid var(--accent-mint);
+  color: var(--text-main);
+  box-shadow: 0 0 20px rgba(68, 229, 146, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--accent-mint);
+  color: var(--bg-deep);
+  box-shadow: 0 0 30px rgba(68, 229, 146, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--accent-pitch);
+  color: var(--accent-mint);
+  transform: translateY(-2px);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #c4962c, #694a08);
+  border: 1px solid var(--accent-gold);
+  color: #fff;
+  box-shadow: var(--shadow-gold-glow);
+}
+
+.btn-gold:hover {
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+}
+
+.btn-icon:hover {
+  border-color: var(--accent-mint);
+  color: var(--accent-mint);
+}
+
+/* ==========================================================================
+   CHAMPS DE FORMULAIRE & FILTRES
+   ========================================================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+}
+
+.input-control, .select-control {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  color: var(--text-main);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.input-control:focus, .select-control:focus {
+  border-color: var(--accent-mint);
+  box-shadow: 0 0 12px rgba(68, 229, 146, 0.25);
+  background: var(--bg-surface-elevated);
+}
+
+.select-control {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2344e592' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+/* Custom Range Slider style studio tactique */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(52, 134, 111, 0.35);
+  border-radius: var(--radius-pill);
+  outline: none;
+  transition: background var(--transition-fast);
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-mint);
+  cursor: pointer;
+  border: 2px solid var(--bg-deep);
+  box-shadow: 0 0 10px var(--accent-mint);
+  transition: transform var(--transition-fast);
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+
+/* ==========================================================================
+   FOOTER DU VESTIAIRE
+   ========================================================================== */
+.site-footer {
+  margin-top: 100px;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border-medium);
+  padding: 60px 0 30px;
+  position: relative;
+  z-index: 10;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 50px;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.footer-manifesto {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 380px;
+}
+
+.footer-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-mint);
+  margin-bottom: 16px;
+}
+
+.footer-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  transition: color var(--transition-fast);
+}
+
+.footer-links a:hover {
+  color: var(--accent-mint);
+  padding-left: 4px;
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-faint);
+  padding-top: 24px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.footer-badge-lfs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(39, 108, 93, 0.3);
+  border: 1px solid var(--border-faint);
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   RESPONSIVE BASE
+   ========================================================================== */
+@media (max-width: 992px) {
+  .site-nav {
+    display: none;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}
