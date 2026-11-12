@@ -4,43 +4,57 @@
 # qui coûte moins de 50 millions
 
 
+from pathlib import Path
 from ollama import chat
-import json
+
 from app.services.RecommendationCriteria import RecommendationCriteria
 
-des = input("Description du joueur : ")
 
-reponse = chat(
-    model="llama3.2",
-    messages=[
-        {
-            "role": "system",
-            "content": """
-            Tu es un expert en football.
 
-            Analyse la demande de l'utilisateur et identifie :
-            - Le poste recherché (ST, CB, GK, CM, CAM, etc.)
-            - Les qualités recherchées (vitesse, dribble, tir, etc.)
-
-            Retourne uniquement un JSON sous cette forme :
-            {
-                "position": "ST",
-                "qualites": ["vitesse", "dribble"]
-            }
-
-            Adapte les valeurs à la demande de l'utilisateur.
-            Si le poste n'est pas précisé, utilise null.
-            """
-        },
-        {
-            "role": "user",
-            "content": des
-        }
-    ],
-    format=RecommendationCriteria.model_json_schema()
+CONTEXTE_PATH = (
+    Path(__file__).resolve().parent
+    / "Contexte_LLM.md"
 )
 
-criteres = RecommendationCriteria.model_validate_json(reponse.message.content)
 
-print(criteres.position)
-print(criteres.qualites)
+def extraire_criteres(description: str) -> RecommendationCriteria:
+
+    
+    contexte = CONTEXTE_PATH.read_text(encoding="utf-8")
+
+    
+    reponse = chat(
+        model="llama3.2",
+        messages=[
+            {
+                "role": "system",
+                "content": contexte
+            },
+            {
+                "role": "user",
+                "content": description
+            }
+        ],
+        format=RecommendationCriteria.model_json_schema(),
+        options={"temperature": 0}
+    )
+
+    
+    criteres = RecommendationCriteria.model_validate_json(
+        reponse.message.content
+    )
+
+    return criteres
+
+
+
+if __name__ == "__main__":
+
+    description = input("Description du joueur : ")
+
+    criteres = extraire_criteres(description)
+
+    print("Poste :", criteres.position)
+    print("Qualités :", criteres.qualites)
+    print("Âge maximal :", criteres.max_age)
+    print("Budget maximal :", criteres.max_budget)
