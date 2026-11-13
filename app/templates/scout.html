@@ -122,7 +122,27 @@
                    min="70" 
                    max="94" 
                    value="{{ current_filters.min_overall or 80 }}" 
-                   data-target="labelMinOvr">
+                   data-target="labelMinOvr"
+                   data-suffix="+">
+          </div>
+
+          <!-- Budget max (Prix) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Budget max (Prix)</span>
+              <span id="labelMaxBudget" style="color: var(--accent-gold); font-family: var(--font-mono); font-weight: 700;">
+                {{ current_filters.max_budget or 50 }} M€
+              </span>
+            </div>
+            <input type="range" 
+                   name="max_budget" 
+                   class="range-slider" 
+                   min="1" 
+                   max="150" 
+                   value="{{ current_filters.max_budget or 50 }}" 
+                   data-target="labelMaxBudget"
+                   data-suffix=" M€"
+                   data-max-label="Illimité (150M€+)">
           </div>
 
           <!-- Vitesse Minimale (Slider) -->
@@ -130,16 +150,84 @@
             <div class="form-label">
               <span>Vitesse min (PAC)</span>
               <span id="labelMinPace" style="color: var(--accent-mint); font-family: var(--font-mono);">
-                {{ current_filters.min_pace or 70 }}+
+                {{ current_filters.min_pace or 75 }}+
               </span>
             </div>
             <input type="range" 
                    name="min_pace" 
                    class="range-slider" 
-                   min="60" 
+                   min="50" 
                    max="96" 
-                   value="{{ current_filters.min_pace or 70 }}" 
-                   data-target="labelMinPace">
+                   value="{{ current_filters.min_pace or 75 }}" 
+                   data-target="labelMinPace"
+                   data-suffix="+">
+          </div>
+
+          <!-- Gestes techniques (skill_moves) -->
+          <div class="form-group">
+            <label class="form-label">Gestes techniques</label>
+            <div class="star-pill-group stars-gold" role="radiogroup">
+              {% for sm in ["", "2", "3", "4", "5"] %}
+                <label class="star-pill-label">
+                  <input type="radio" 
+                         name="skill_moves" 
+                         value="{{ sm }}" 
+                         class="star-pill-input"
+                         {% if (current_filters.skill_moves == sm) or (not current_filters.skill_moves and sm == "") %}checked{% endif %}>
+                  <span class="star-pill {% if sm == '5' %}gold-glow{% endif %}">
+                    {% if sm == "" %}Tous{% elif sm == '5' %}5★{% else %}{{ sm }}★+{% endif %}
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Mauvais pied (weak_foot) -->
+          <div class="form-group">
+            <label class="form-label">Mauvais pied</label>
+            <div class="star-pill-group" role="radiogroup">
+              {% for wf in ["", "3", "4", "5"] %}
+                <label class="star-pill-label">
+                  <input type="radio" 
+                         name="weak_foot" 
+                         value="{{ wf }}" 
+                         class="star-pill-input"
+                         {% if (current_filters.weak_foot == wf) or (not current_filters.weak_foot and wf == "") %}checked{% endif %}>
+                  <span class="star-pill">
+                    {% if wf == "" %}Tous{% elif wf == '5' %}5★{% else %}{{ wf }}★+{% endif %}
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Âge max -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Âge max</span>
+              <span id="labelMaxAge" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.max_age or 30 }} ans
+              </span>
+            </div>
+            <input type="range" 
+                   name="max_age" 
+                   class="range-slider" 
+                   min="18" 
+                   max="38" 
+                   value="{{ current_filters.max_age or 30 }}" 
+                   data-target="labelMaxAge"
+                   data-suffix=" ans"
+                   data-max-label="Tous âges (38+)">
+          </div>
+
+          <!-- Pied fort (preferred_foot) -->
+          <div class="form-group">
+            <label class="form-label" for="filterFoot">Pied fort</label>
+            <select id="filterFoot" name="preferred_foot" class="select-control">
+              <option value="">Tous les pieds</option>
+              <option value="Right" {% if current_filters.preferred_foot == 'Right' %}selected{% endif %}>Droitier (Right)</option>
+              <option value="Left" {% if current_filters.preferred_foot == 'Left' %}selected{% endif %}>Gaucher (Left)</option>
+            </select>
           </div>
 
           <!-- Championnat -->

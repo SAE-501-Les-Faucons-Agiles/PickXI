@@ -53,11 +53,27 @@
          MODE 1 : RECHERCHE PAR CRITÈRES (BASE DE DONNÉES)
          ==================================================================== -->
     <div id="searchModeCriteria" style="background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-elevated);">
-      <form action="/scout" method="GET">
+      <form action="/scout" method="GET" id="homeCriteriaForm">
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px;">
+        <!-- En-tête du formulaire avec badge data réelle & bouton reset -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding-bottom: 12px; border-bottom: 1px solid var(--border-faint); flex-wrap: wrap; gap: 10px;">
+          <div>
+            <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; text-transform: uppercase; color: var(--accent-mint);">
+              Filtres de recherche FC 26
+            </span>
+            <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">
+              Données réelles de la base (prix, stats & étoiles)
+            </span>
+          </div>
+          <button type="button" id="resetCriteriaBtn" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 4px 12px;" title="Remettre à zéro tous les critères">
+            Réinitialiser
+          </button>
+        </div>
+
+        <!-- GRILLE PRINCIPALE (Ligne 1 : Poste, Prix / Budget max, Vitesse min, Gestes techniques) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
           
-          <!-- Poste -->
+          <!-- 1. Poste (position_code / positions) -->
           <div class="form-group">
             <label class="form-label" for="homePosSelect">Poste</label>
             <select id="homePosSelect" name="pos" class="select-control">
@@ -75,25 +91,133 @@
             </select>
           </div>
 
-          <!-- Note min -->
+          <!-- 2. Prix / Budget max (market_value_eur / value_eur) -->
           <div class="form-group">
             <div class="form-label">
-              <span>Note générale min</span>
-              <span id="homeOvrVal" style="color: var(--accent-mint); font-family: var(--font-mono);">80+</span>
+              <span>Budget max (Prix)</span>
+              <span id="homeBudgetVal" style="color: var(--accent-gold); font-family: var(--font-mono); font-weight: 700;">50 M€</span>
             </div>
-            <input type="range" name="min_ovr" class="range-slider" min="70" max="94" value="80" data-target="homeOvrVal">
+            <input type="range" name="max_budget" id="homeBudgetSlider" class="range-slider" min="1" max="150" value="50" step="1"
+                   data-target="homeBudgetVal" data-suffix=" M€" data-max-label="Illimité (150M€+)">
+            <div class="quick-chips-row">
+              <button type="button" class="quick-chip-btn" data-slider="homeBudgetSlider" data-value="10">10M</button>
+              <button type="button" class="quick-chip-btn" data-slider="homeBudgetSlider" data-value="25">25M</button>
+              <button type="button" class="quick-chip-btn active-gold" data-slider="homeBudgetSlider" data-value="50">50M</button>
+              <button type="button" class="quick-chip-btn" data-slider="homeBudgetSlider" data-value="100">100M</button>
+              <button type="button" class="quick-chip-btn" data-slider="homeBudgetSlider" data-value="150">Max</button>
+            </div>
           </div>
 
-          <!-- Vitesse min -->
+          <!-- 3. Vitesse min (pace / player_stats.pace) -->
           <div class="form-group">
             <div class="form-label">
               <span>Vitesse min (PAC)</span>
-              <span id="homePaceVal" style="color: var(--accent-mint); font-family: var(--font-mono);">75+</span>
+              <span id="homePaceVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-weight: 700;">75+</span>
             </div>
-            <input type="range" name="min_pace" class="range-slider" min="60" max="96" value="75" data-target="homePaceVal">
+            <input type="range" name="min_pace" id="homePaceSlider" class="range-slider" min="50" max="96" value="75" step="1"
+                   data-target="homePaceVal" data-suffix="+">
+            <div class="quick-chips-row">
+              <button type="button" class="quick-chip-btn" data-slider="homePaceSlider" data-value="70">70+</button>
+              <button type="button" class="quick-chip-btn active" data-slider="homePaceSlider" data-value="75">75+</button>
+              <button type="button" class="quick-chip-btn" data-slider="homePaceSlider" data-value="85">85+ (Rapide)</button>
+              <button type="button" class="quick-chip-btn" data-slider="homePaceSlider" data-value="90">90+ (Fusée)</button>
+            </div>
           </div>
 
-          <!-- Championnat -->
+          <!-- 4. Gestes techniques (skill_moves / player_editions.skill_moves) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Gestes techniques</span>
+              <span id="homeSkillVal" style="color: var(--accent-gold); font-family: var(--font-mono); font-weight: 700;">Tous</span>
+            </div>
+            <div class="star-pill-group stars-gold" role="radiogroup" aria-label="Gestes techniques">
+              <label class="star-pill-label" title="Tous les niveaux de gestes techniques">
+                <input type="radio" name="skill_moves" value="" checked class="star-pill-input" data-display-target="homeSkillVal" data-label="Tous">
+                <span class="star-pill">Tous</span>
+              </label>
+              <label class="star-pill-label" title="2 étoiles et plus">
+                <input type="radio" name="skill_moves" value="2" class="star-pill-input" data-display-target="homeSkillVal" data-label="2★+">
+                <span class="star-pill">2★+</span>
+              </label>
+              <label class="star-pill-label" title="3 étoiles et plus">
+                <input type="radio" name="skill_moves" value="3" class="star-pill-input" data-display-target="homeSkillVal" data-label="3★+">
+                <span class="star-pill">3★+</span>
+              </label>
+              <label class="star-pill-label" title="4 étoiles et plus (Dribbles avancés)">
+                <input type="radio" name="skill_moves" value="4" class="star-pill-input" data-display-target="homeSkillVal" data-label="4★+">
+                <span class="star-pill">4★+</span>
+              </label>
+              <label class="star-pill-label" title="5 étoiles (Gestes d'élite / Elastico, Rabona)">
+                <input type="radio" name="skill_moves" value="5" class="star-pill-input" data-display-target="homeSkillVal" data-label="5★ (Élite)">
+                <span class="star-pill gold-glow">5★</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- GRILLE SECONDAIRE (Ligne 2 : Note min, Mauvais pied, Âge max, Championnat) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
+          
+          <!-- 5. Note générale min (overall / player_editions.overall) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Note générale min</span>
+              <span id="homeOvrVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-weight: 700;">80+</span>
+            </div>
+            <input type="range" name="min_ovr" id="homeOvrSlider" class="range-slider" min="70" max="94" value="80" step="1"
+                   data-target="homeOvrVal" data-suffix="+">
+            <div class="quick-chips-row">
+              <button type="button" class="quick-chip-btn" data-slider="homeOvrSlider" data-value="75">75+</button>
+              <button type="button" class="quick-chip-btn active" data-slider="homeOvrSlider" data-value="80">80+</button>
+              <button type="button" class="quick-chip-btn" data-slider="homeOvrSlider" data-value="85">85+</button>
+              <button type="button" class="quick-chip-btn" data-slider="homeOvrSlider" data-value="88">88+ (Top)</button>
+            </div>
+          </div>
+
+          <!-- 6. Mauvais pied (weak_foot / player_editions.weak_foot) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Mauvais pied</span>
+              <span id="homeWeakVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-weight: 700;">Tous</span>
+            </div>
+            <div class="star-pill-group" role="radiogroup" aria-label="Mauvais pied">
+              <label class="star-pill-label" title="Tous les niveaux de mauvais pied">
+                <input type="radio" name="weak_foot" value="" checked class="star-pill-input" data-display-target="homeWeakVal" data-label="Tous">
+                <span class="star-pill">Tous</span>
+              </label>
+              <label class="star-pill-label" title="3 étoiles et plus">
+                <input type="radio" name="weak_foot" value="3" class="star-pill-input" data-display-target="homeWeakVal" data-label="3★+">
+                <span class="star-pill">3★+</span>
+              </label>
+              <label class="star-pill-label" title="4 étoiles et plus">
+                <input type="radio" name="weak_foot" value="4" class="star-pill-input" data-display-target="homeWeakVal" data-label="4★+">
+                <span class="star-pill">4★+</span>
+              </label>
+              <label class="star-pill-label" title="5 étoiles (Pied parfait / 2 pieds)">
+                <input type="radio" name="weak_foot" value="5" class="star-pill-input" data-display-target="homeWeakVal" data-label="5★ (Parfait)">
+                <span class="star-pill">5★</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 7. Âge max (age / player_editions.age) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Âge max</span>
+              <span id="homeAgeVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-weight: 700;">30 ans</span>
+            </div>
+            <input type="range" name="max_age" id="homeAgeSlider" class="range-slider" min="18" max="38" value="30" step="1"
+                   data-target="homeAgeVal" data-suffix=" ans" data-max-label="Tous âges (38+)">
+            <div class="quick-chips-row">
+              <button type="button" class="quick-chip-btn" data-slider="homeAgeSlider" data-value="21">≤ 21 ans (Espoir)</button>
+              <button type="button" class="quick-chip-btn" data-slider="homeAgeSlider" data-value="26">≤ 26 ans</button>
+              <button type="button" class="quick-chip-btn active" data-slider="homeAgeSlider" data-value="30">≤ 30 ans</button>
+              <button type="button" class="quick-chip-btn" data-slider="homeAgeSlider" data-value="38">Max</button>
+            </div>
+          </div>
+
+          <!-- 8. Championnat (leagues.name / leagues) -->
           <div class="form-group">
             <label class="form-label" for="homeLeagueSelect">Championnat</label>
             <select id="homeLeagueSelect" name="league" class="select-control">
@@ -103,16 +227,161 @@
               <option value="Serie A">Serie A</option>
               <option value="Bundesliga">Bundesliga</option>
               <option value="Ligue 1">Ligue 1</option>
+              <option value="Saudi Pro League">Saudi Pro League</option>
+              <option value="Major League Soccer">Major League Soccer</option>
             </select>
           </div>
 
         </div>
 
+        <!-- BOUTON DÉROULANT CRITÈRES AVANCÉS (BD : Pied fort, Potentiel, PlayStyles, Stats) -->
+        <button type="button" id="toggleAdvancedFiltersBtn" class="filter-toggle-btn" aria-expanded="false" aria-controls="advancedFiltersPanel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" x2="20" y1="21" y2="21"></line>
+            <line x1="4" x2="20" y1="14" y2="14"></line>
+            <line x1="4" x2="20" y1="7" y2="7"></line>
+            <circle cx="9" cy="21" r="2"></circle>
+            <circle cx="15" cy="14" r="2"></circle>
+            <circle cx="10" cy="7" r="2"></circle>
+          </svg>
+          <span id="advancedToggleText">Critères avancés (Pied fort, Potentiel, PlayStyles, Stats détaillées)</span>
+          <span class="toggle-icon">▾</span>
+        </button>
+
+        <!-- PANNEAU DÉROULABLE CRITÈRES AVANCÉS -->
+        <div id="advancedFiltersPanel" class="advanced-filters-panel" role="region" aria-label="Critères avancés">
+          
+          <div class="advanced-panel-header">
+            <div class="advanced-panel-title">
+              <span>Attributs complémentaires & statistiques réelles de la BD</span>
+            </div>
+            <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-display);">
+              Tables player_editions & player_stats
+            </span>
+          </div>
+
+          <!-- Attributs tactiques complémentaires -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 22px;">
+            
+            <!-- Pied fort (preferred_foot / player_editions.preferred_foot) -->
+            <div class="form-group">
+              <label class="form-label" for="homeFootSelect">Pied fort</label>
+              <select id="homeFootSelect" name="preferred_foot" class="select-control">
+                <option value="">Tous les pieds</option>
+                <option value="Right">Droitier (Right)</option>
+                <option value="Left">Gaucher (Left)</option>
+              </select>
+            </div>
+
+            <!-- Potentiel min (potential / player_editions.potential) -->
+            <div class="form-group">
+              <div class="form-label">
+                <span>Potentiel min</span>
+                <span id="homePotVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-weight: 700;">80+</span>
+              </div>
+              <input type="range" name="min_potential" id="homePotSlider" class="range-slider" min="70" max="95" value="80" step="1"
+                     data-target="homePotVal" data-suffix="+">
+            </div>
+
+            <!-- PlayStyle signature (playstyles.name / playstyles) -->
+            <div class="form-group">
+              <label class="form-label" for="homePlaystyleSelect">PlayStyle</label>
+              <select id="homePlaystyleSelect" name="playstyle" class="select-control">
+                <option value="ALL">Tous les PlayStyles</option>
+                <option value="Anticipate">Anticipation (Anticipate)</option>
+                <option value="Relentless">Infatigable (Relentless)</option>
+                <option value="Quick Step">Premier Pas (Quick Step)</option>
+                <option value="Rapid">Fusée (Rapid)</option>
+                <option value="Finesse Shot">Tir Enroulé (Finesse Shot)</option>
+                <option value="Power Shot">Tir Puissant (Power Shot)</option>
+                <option value="Whipped Pass">Passe Traversante (Whipped Pass)</option>
+                <option value="Technical">Technique (Technical)</option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Sous-stats clés (player_stats : Tir, Passe, Dribble, Défense, Physique) -->
+          <div style="border-top: 1px solid var(--border-faint); padding-top: 16px;">
+            <div style="font-family: var(--font-display); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 14px;">
+              Statistiques majeures minimales (player_stats)
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+              
+              <!-- Tir min (shooting / player_stats.shooting) -->
+              <div class="form-group">
+                <div class="form-label">
+                  <span>Tir min (SHO)</span>
+                  <span id="homeShoVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-size: 0.85rem;">70+</span>
+                </div>
+                <input type="range" name="min_shooting" class="range-slider" min="40" max="94" value="70" step="1"
+                       data-target="homeShoVal" data-suffix="+">
+              </div>
+
+              <!-- Passe min (passing / player_stats.passing) -->
+              <div class="form-group">
+                <div class="form-label">
+                  <span>Passe min (PAS)</span>
+                  <span id="homePasVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-size: 0.85rem;">70+</span>
+                </div>
+                <input type="range" name="min_passing" class="range-slider" min="40" max="94" value="70" step="1"
+                       data-target="homePasVal" data-suffix="+">
+              </div>
+
+              <!-- Dribble min (dribbling / player_stats.dribbling) -->
+              <div class="form-group">
+                <div class="form-label">
+                  <span>Dribble min (DRI)</span>
+                  <span id="homeDriVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-size: 0.85rem;">75+</span>
+                </div>
+                <input type="range" name="min_dribbling" class="range-slider" min="40" max="96" value="75" step="1"
+                       data-target="homeDriVal" data-suffix="+">
+              </div>
+
+              <!-- Défense min (defending / player_stats.defending) -->
+              <div class="form-group">
+                <div class="form-label">
+                  <span>Défense min (DEF)</span>
+                  <span id="homeDefVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-size: 0.85rem;">60+</span>
+                </div>
+                <input type="range" name="min_defending" class="range-slider" min="30" max="94" value="60" step="1"
+                       data-target="homeDefVal" data-suffix="+">
+              </div>
+
+              <!-- Physique min (physicality / player_stats.physicality) -->
+              <div class="form-group">
+                <div class="form-label">
+                  <span>Physique min (PHY)</span>
+                  <span id="homePhyVal" style="color: var(--accent-mint); font-family: var(--font-mono); font-size: 0.85rem;">70+</span>
+                </div>
+                <input type="range" name="min_physicality" class="range-slider" min="40" max="94" value="70" step="1"
+                       data-target="homePhyVal" data-suffix="+">
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RÉSUMÉ EN DIRECT DES CRITÈRES SÉLECTIONNÉS -->
+        <div class="filter-live-summary">
+          <span class="summary-label">Critères actifs :</span>
+          <div id="liveFiltersChips" class="live-chips-wrap">
+            <!-- Rempli dynamiquement par JS -->
+          </div>
+        </div>
+
+        <!-- PIED DU FORMULAIRE : ACTION DE RECHERCHE -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border-top: 1px solid var(--border-faint); padding-top: 20px;">
           <div style="font-size: 0.88rem; color: var(--text-secondary);">
-            Compare directement les critères avec les joueurs enregistrés en base.
+            Compare directement les critères avec les joueurs réels enregistrés en base.
           </div>
-          <button type="submit" class="btn btn-primary">
+          <button type="submit" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
             Lancer la recherche par critères →
           </button>
         </div>
