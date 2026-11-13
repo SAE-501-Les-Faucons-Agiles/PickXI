@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, render_template
 
 
 def create_app():
@@ -11,6 +11,7 @@ def create_app():
 	)
 
 	app.config["SESSION_COOKIE_SECURE"] = False  # dev mode
+
 
 	# Enregistrement centralisé des Blueprints / Contrôleurs modulaires
 	from app.blueprints import (
