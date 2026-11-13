@@ -163,6 +163,12 @@ class PlayerService:
         min_ovr = int(filters.get("min_ovr")) if filters.get("min_ovr") else None
         min_pace = int(filters.get("min_pace")) if filters.get("min_pace") else None
         max_age = int(filters.get("max_age")) if filters.get("max_age") else None
+        min_potential = int(filters.get("min_potential")) if filters.get("min_potential") else None
+        min_shooting = int(filters.get("min_shooting")) if filters.get("min_shooting") else None
+        min_passing = int(filters.get("min_passing")) if filters.get("min_passing") else None
+        min_dribbling = int(filters.get("min_dribbling")) if filters.get("min_dribbling") else None
+        min_defending = int(filters.get("min_defending")) if filters.get("min_defending") else None
+        min_physicality = int(filters.get("min_physicality")) if filters.get("min_physicality") else None
         max_budget = filters.get("max_budget")
         league = filters.get("league") or "ALL"
         sort_mode = filters.get("sort") or "overall_desc"
@@ -202,6 +208,18 @@ class PlayerService:
             if min_ovr and getattr(p, "overall", 0) < min_ovr:
                 continue
             if min_pace and getattr(p, "pace", 0) < min_pace:
+                continue
+            if min_potential and getattr(p, "potential", 0) < min_potential:
+                continue
+            if min_shooting and getattr(p, "shooting", 0) < min_shooting:
+                continue
+            if min_passing and getattr(p, "passing", 0) < min_passing:
+                continue
+            if min_dribbling and getattr(p, "dribbling", 0) < min_dribbling:
+                continue
+            if min_defending and getattr(p, "defending", 0) < min_defending:
+                continue
+            if min_physicality and getattr(p, "physicality", 0) < min_physicality:
                 continue
             if max_age and getattr(p, "age", 0) > max_age:
                 continue

@@ -24,7 +24,13 @@ def scout():
         'preferred_foot': request.args.get('preferred_foot'),
         'league': request.args.get('league', 'ALL'),
         'playstyle': request.args.get('playstyle', 'ALL'),
-        'sort': request.args.get('sort', 'overall_desc')
+        'sort': request.args.get('sort', 'overall_desc'),
+        'min_potential': request.args.get('min_potential'),
+        'min_shooting': request.args.get('min_shooting'),
+        'min_passing': request.args.get('min_passing'),
+        'min_dribbling': request.args.get('min_dribbling'),
+        'min_defending': request.args.get('min_defending'),
+        'min_physicality': request.args.get('min_physicality')
     }
 
     # Recherche via le PlayerService
@@ -61,7 +67,13 @@ def api_search():
         'preferred_foot': request.args.get('preferred_foot'),
         'league': request.args.get('league', 'ALL'),
         'playstyle': request.args.get('playstyle', 'ALL'),
-        'sort': request.args.get('sort', 'overall_desc')
+        'sort': request.args.get('sort', 'overall_desc'),
+        'min_potential': request.args.get('min_potential'),
+        'min_shooting': request.args.get('min_shooting'),
+        'min_passing': request.args.get('min_passing'),
+        'min_dribbling': request.args.get('min_dribbling'),
+        'min_defending': request.args.get('min_defending'),
+        'min_physicality': request.args.get('min_physicality')
     }
 
     result = player_service.search_players(filters, page=page, per_page=20)
