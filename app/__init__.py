@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask
 
 
 def create_app():
@@ -12,29 +12,20 @@ def create_app():
 
 	app.config["SESSION_COOKIE_SECURE"] = False  # dev mode
 
-	# Routes de rendu des templates front-end
-	@app.route('/')
-	def index():
-		return render_template('index.html', active_page='home')
+	# Enregistrement centralisé des Blueprints / Contrôleurs modulaires
+	from app.blueprints import (
+		index_bp,
+		scout_bp,
+		compare_bp,
+		pitch_bp,
+		player_bp
+	)
 
-	@app.route('/scout')
-	def scout():
-		return render_template('scout.html', active_page='scout')
-
-	@app.route('/pitch')
-	def pitch():
-		return render_template('pitch.html', active_page='pitch')
-
-	@app.route('/compare')
-	def compare():
-		return render_template('compare.html', active_page='compare')
-
-	@app.route('/player/<int:player_id>')
-	def player(player_id=252371):
-		return render_template('player.html', active_page='scout')
-
-	#from app.blueprints import ()
-	#app.register_blueprint(?)
+	app.register_blueprint(index_bp)
+	app.register_blueprint(scout_bp)
+	app.register_blueprint(compare_bp)
+	app.register_blueprint(pitch_bp)
+	app.register_blueprint(player_bp)
 
 	return app
 
