@@ -15,6 +15,7 @@ class RecommendationCriteria(BaseModel):
     ] = Field(default_factory=list)  
 
     max_age: int | None = Field(default=None, ge=15, le=50)
+    min_age: int | None = Field(default=None, ge=15, le=50)
     max_budget: int | None = Field(default=None, ge=0)
     min_budget: int | None = Field(default=None, ge=0)
 
