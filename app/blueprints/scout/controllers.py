@@ -1,7 +1,11 @@
 from flask import render_template, request, jsonify
 from . import scout_bp
 from app.services import player_service, reference_service
+from flask import current_app
+from ollama import ResponseError
+from pydantic import ValidationError
 
+from app.services.IARecommendationService import recommander
 
 @scout_bp.route('', methods=['GET'])
 @scout_bp.route('/', methods=['GET'])
@@ -78,3 +82,56 @@ def api_search():
 
     result = player_service.search_players(filters, page=page, per_page=20)
     return jsonify(result)
+
+
+@scout_bp.route('/api/recommend', methods=['POST'])
+def api_recommend():
+    donnees=request.get_json(silent=True)
+    if not isinstance(donnees,dict):
+        return jsonify({"error": "Invalid JSON data"}), 400
+    description = donnees.get('description')
+    if not isinstance(description, str) or not description.strip():
+        return jsonify({"error": "Description is required and must be a non-empty string"}), 400
+    try:
+        resultats = recommander(
+            description.strip(),
+            avec_explications=False
+        )
+
+        recommandations = []
+
+        for resultat in resultats:
+            joueur = resultat["joueur"]
+
+            recommandations.append({
+                "joueur": {
+                    "sofifa_id": joueur.sofifa_id,
+                    "name": joueur.name,
+                    "club": joueur.club,
+                    "position": joueur.position,
+                    "age": joueur.age,
+                    "overall": joueur.overall,
+                    "market_value_eur": joueur.market_value_eur
+                },
+                "explication": resultat["explication"]
+            })
+
+        return jsonify({"recommandations": recommandations})
+
+    except (ConnectionError, ResponseError):
+        current_app.logger.exception("Erreur Ollama")
+        return jsonify({
+            "erreur": "Ollama est indisponible ou llama3.2 est inaccessible."
+        }), 503
+
+    except ValidationError:
+        current_app.logger.exception("Critères IA invalides")
+        return jsonify({
+            "erreur": "La demande n'a pas pu être interprétée. Reformule-la."
+        }), 422
+
+    except Exception:
+        current_app.logger.exception("Erreur de recommandation")
+        return jsonify({
+            "erreur": "La recherche a échoué."
+        }), 500

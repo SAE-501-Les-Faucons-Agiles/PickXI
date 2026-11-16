@@ -1507,31 +1507,83 @@ function initChatbox() {
     return bubble;
   }
 
-  function handleSend(userText) {
-    if (!userText.trim()) return;
-    appendMessage('user', userText);
-    chatInput.value = '';
+  let rechercheEnCours = false;
 
-    // Réponse de l'assistant (naturelle, directe et football)
-    setTimeout(() => {
-      const lower = userText.toLowerCase();
-      let reply = "Je regarde dans la base de données. ";
+async function handleSend(userText) {
+  const description = userText.trim();
 
-      if (lower.includes("buteur") || lower.includes("st") || lower.includes("attaquant") || lower.includes("bu")) {
-        reply += "En pointe, regarde Victor Osimhen ou Viktor Gyökeres : grosse vitesse, physique solide et finition efficace pour un prix raisonnable.";
-      } else if (lower.includes("milieu") || lower.includes("cm") || lower.includes("mdc") || lower.includes("valverde") || lower.includes("bellingham")) {
-        reply += "Si tu cherches un milieu infatigable avec du volume de jeu, regarde Manuel Ugarte ou Douglas Luiz qui ont un profil très proche pour bien moins cher.";
-      } else if (lower.includes("défenseur") || lower.includes("dc") || lower.includes("cb") || lower.includes("saliba")) {
-        reply += "En défense centrale, William Saliba ou Bremer sont excellents dans les duels et ont de très bons tacles debout.";
-      } else if (lower.includes("ailier") || lower.includes("lw") || lower.includes("rw") || lower.includes("ag") || lower.includes("ad")) {
-        reply += "Sur les côtés, Nico Williams et Moussa Diaby apportent une accélération immédiate sur les premiers mètres.";
-      } else {
-        reply += "Voici les profils correspondants avec un bon équilibre entre note, vitesse et valeur sur le marché.";
+  if (!description || rechercheEnCours) return;
+
+  rechercheEnCours = true;
+
+  const boutonEnvoyer = chatForm.querySelector('button[type="submit"]');
+  boutonEnvoyer.disabled = true;
+  quickBtns.forEach(btn => btn.disabled = true);
+
+  appendMessage('user', description);
+  chatInput.value = '';
+
+  const attente = appendMessage(
+    'bot',
+    'Recherche en cours… Le traitement local peut prendre du temps.'
+  );
+
+  try {
+    const response = await fetch('/scout/api/recommend', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ description })
+    });
+
+    const donnees = await response.json();
+
+    if (!response.ok) {
+      throw new Error(donnees.erreur || 'La recherche a échoué.');
+    }
+
+    attente.remove();
+
+    const recommandations = donnees.recommandations;
+
+    if (recommandations.length === 0) {
+      appendMessage('bot', 'Aucun joueur ne correspond à ta demande.');
+      return;
+    }
+
+    for (const resultat of recommandations) {
+      const joueur = resultat.joueur;
+
+      const valeur = joueur.market_value_eur === null
+        ? 'Inconnue'
+        : new Intl.NumberFormat('fr-FR', {
+            style: 'currency',
+            currency: 'EUR',
+            maximumFractionDigits: 0
+          }).format(joueur.market_value_eur);
+
+      appendMessage(
+        'bot',
+        `${joueur.name} — ${joueur.club ?? 'Club inconnu'} | ` +
+        `${joueur.position ?? 'Poste inconnu'} | ` +
+        `${joueur.age ?? '?'} ans | ` +
+        `Note : ${joueur.overall ?? '?'} | Valeur : ${valeur}`
+      );
+
+      if (resultat.explication) {
+        appendMessage('bot', resultat.explication);
       }
-
-      appendMessage('bot', reply);
-    }, 400);
+    }
+  } catch (erreur) {
+    attente.remove();
+    appendMessage('bot', erreur.message);
+  } finally {
+    rechercheEnCours = false;
+    boutonEnvoyer.disabled = false;
+    quickBtns.forEach(btn => btn.disabled = false);
   }
+}
 
   chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
