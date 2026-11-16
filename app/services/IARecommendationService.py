@@ -4,24 +4,23 @@
 # ont des llms pour comprendre les dmds du user.
 
 
-from app.services.LLMService import extraire_criteres
+# Coordination : LLM → DAO → KNN → Explications
 
-from app.services.SimilarityService import (
-    classer_joueurs_knn,
-    QUALITES_STATS
+from app.services.LLMService import (
+    extraire_criteres,
+    expliquer_recommandations
 )
 
+from app.services.SimilarityService import classer_joueurs_knn
 from app.models.PlayerDAO import PlayerSqliteDAO
 
 
-def recommander(description: str):
+def recommander(description: str, avec_explications=True):
 
-   
+    # 1. Comprendre la demande utilisateur
     criteres = extraire_criteres(description)
 
-    print("Critères identifiés :", criteres.model_dump())
-
-    
+    # 2. Récupérer les joueurs dans la base de données
     dao = PlayerSqliteDAO()
 
     joueurs = dao.findByCriteria(
@@ -31,8 +30,7 @@ def recommander(description: str):
         max_budget=criteres.max_budget
     )
 
-    
-     # 4. Filtrer l'âge minimum
+    # 3. Filtrer selon l'âge minimum
     if criteres.min_age is not None:
         joueurs = [
             joueur for joueur in joueurs
@@ -40,36 +38,18 @@ def recommander(description: str):
             and joueur.age >= criteres.min_age
         ]
 
-    # 5. Vérifier l'âge maximum
-    if criteres.max_age is not None:
-        joueurs = [
-            joueur for joueur in joueurs
-            if joueur.age is not None
-            and joueur.age <= criteres.max_age
-        ]
-
-    # 6. Filtrer le budget minimum
+    # 4. Filtrer selon le budget minimum
     if criteres.min_budget is not None:
         joueurs = [
             joueur for joueur in joueurs
-            if joueur.market_value_eur > criteres.min_budget
+            if joueur.market_value_eur is not None
+            and joueur.market_value_eur > criteres.min_budget
         ]
-
-    # 7. Vérifier le budget maximum
-    if criteres.max_budget is not None:
-        joueurs = [
-            joueur for joueur in joueurs
-            if joueur.market_value_eur <= criteres.max_budget
-        ]
-        
-
-    print("Joueurs correspondants :", len(joueurs))
 
     if not joueurs:
-        print("Aucun joueur trouvé.")
         return []
 
-    
+    # 5. Classer les joueurs avec KNN
     if criteres.qualites:
         recommandations = classer_joueurs_knn(
             joueurs,
@@ -78,22 +58,61 @@ def recommander(description: str):
     else:
         recommandations = sorted(
             joueurs,
-            key=lambda j: j.overall or 0,
+            key=lambda joueur: joueur.overall or 0,
             reverse=True
-        )[:5]
+        )
 
-    
     recommandations = recommandations[:5]
 
-   
+    # 6. Générer les explications avec le LLM
+    explications = {}
+
+    if avec_explications and recommandations:
+        try:
+            explications = expliquer_recommandations(
+                description,
+                recommandations
+            )
+
+        except Exception as erreur:
+            print("Erreur des explications :", erreur)
+
+    # 7. Construire les résultats pour Flask
+    resultats = []
+
+    for joueur in recommandations:
+
+        resultat = {
+            "joueur": joueur,
+            "explication": explications.get(
+                joueur.sofifa_id,
+                ""
+            )
+        }
+
+        resultats.append(resultat)
+
+    return resultats
+
+
+# Affichage des résultats dans le terminal
+def afficher_resultats(resultats):
+
+    if not resultats:
+        print("Aucun joueur trouvé.")
+        return
+
     print("\nTOP 5 RECOMMANDATIONS :")
-    for i, joueur in enumerate(recommandations, start=1):
+
+    for i, resultat in enumerate(resultats, start=1):
+
+        joueur = resultat["joueur"]
+        explication = resultat["explication"]
+
         if joueur.market_value_eur is not None:
-            valeur = f"{joueur.market_value_eur} €"
+            valeur = f"{joueur.market_value_eur:,.0f} €"
         else:
-            valeur = "Inconnu"
-
-
+            valeur = "Inconnue"
 
         print(f"\n{i}. {joueur.name}")
         print(f"   Club : {joueur.club}")
@@ -101,24 +120,14 @@ def recommander(description: str):
         print(f"   Âge : {joueur.age}")
         print(f"   Note générale : {joueur.overall}")
         print(f"   Valeur marchande : {valeur}")
-
-        # Afficher les statistiques demandées
-        for qualite in criteres.qualites:
-
-            statistique = QUALITES_STATS[qualite]
-            note = getattr(joueur, statistique, None)
-
-            print(f"   {qualite.capitalize()} : {note}")
-
-    return recommandations
-    
+        print(f"   Explication : {explication}")
 
 
-
-
-
-
+# Test du service
 if __name__ == "__main__":
+
     description = input("Description du joueur : ")
-    recommander(description)
-   
+
+    resultats = recommander(description)
+
+    afficher_resultats(resultats)
