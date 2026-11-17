@@ -25,27 +25,27 @@
   <!-- Grille des 6 Stats Officielles -->
   <div class="fut-stats-grid">
     <div class="fut-stat-item">
-      <span class="fut-stat-value {% if player.pace >= 90 %}elite{% elif player.pace >= 85 %}high{% endif %}">{{ player.pace }}</span>
+      <span class="fut-stat-value {% if player.pace is not none and player.pace >= 90 %}elite{% elif player.pace is not none and player.pace >= 85 %}high{% endif %}">{{ player.pace if player.pace is not none else '—' }}</span>
       <span class="fut-stat-label">PAC</span>
     </div>
     <div class="fut-stat-item">
-      <span class="fut-stat-value {% if player.dribbling >= 90 %}elite{% elif player.dribbling >= 85 %}high{% endif %}">{{ player.dribbling }}</span>
+      <span class="fut-stat-value {% if player.dribbling is not none and player.dribbling >= 90 %}elite{% elif player.dribbling is not none and player.dribbling >= 85 %}high{% endif %}">{{ player.dribbling if player.dribbling is not none else '—' }}</span>
       <span class="fut-stat-label">DRI</span>
     </div>
     <div class="fut-stat-item">
-      <span class="fut-stat-value {% if player.shooting >= 90 %}elite{% elif player.shooting >= 85 %}high{% endif %}">{{ player.shooting }}</span>
+      <span class="fut-stat-value {% if player.shooting is not none and player.shooting >= 90 %}elite{% elif player.shooting is not none and player.shooting >= 85 %}high{% endif %}">{{ player.shooting if player.shooting is not none else '—' }}</span>
       <span class="fut-stat-label">SHO</span>
     </div>
     <div class="fut-stat-item">
-      <span class="fut-stat-value {% if player.defending >= 90 %}elite{% elif player.defending >= 85 %}high{% endif %}">{{ player.defending }}</span>
+      <span class="fut-stat-value {% if player.defending is not none and player.defending >= 90 %}elite{% elif player.defending is not none and player.defending >= 85 %}high{% endif %}">{{ player.defending if player.defending is not none else '—' }}</span>
       <span class="fut-stat-label">DEF</span>
     </div>
     <div class="fut-stat-item">
-      <span class="fut-stat-value {% if player.passing >= 90 %}elite{% elif player.passing >= 85 %}high{% endif %}">{{ player.passing }}</span>
+      <span class="fut-stat-value {% if player.passing is not none and player.passing >= 90 %}elite{% elif player.passing is not none and player.passing >= 85 %}high{% endif %}">{{ player.passing if player.passing is not none else '—' }}</span>
       <span class="fut-stat-label">PAS</span>
     </div>
     <div class="fut-stat-item">
-      <span class="fut-stat-value {% if player.physicality >= 90 %}elite{% elif player.physicality >= 85 %}high{% endif %}">{{ player.physicality }}</span>
+      <span class="fut-stat-value {% if player.physicality is not none and player.physicality >= 90 %}elite{% elif player.physicality is not none and player.physicality >= 85 %}high{% endif %}">{{ player.physicality if player.physicality is not none else '—' }}</span>
       <span class="fut-stat-label">PHY</span>
     </div>
   </div>
