@@ -1,0 +1,42 @@
+# Commandes depuis la racine du projet :
+#   docker compose up -d --build
+#   docker compose exec ollama ollama pull llama3.2
+# Puis ouvrir http://localhost:8000/scout.
+# Le healthcheck valide Ollama, mais le modèle doit être téléchargé séparément.
+#   docker compose down  : arrête les conteneurs et conserve les modèles.
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    volumes:
+      - type: bind
+        source: ./app/database/football_reco.db
+        target: /srv/app/database/football_reco.db
+        read_only: true
+        bind:
+          # Une base absente doit produire une erreur, pas créer un répertoire.
+          create_host_path: false
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  ollama:
+    image: ollama/ollama:latest
+    environment:
+      # Éviter de charger plusieurs modèles ou inférences sur ce PC à CPU.
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  ollama_models:
