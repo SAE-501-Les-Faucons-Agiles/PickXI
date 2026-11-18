@@ -1,7 +1,7 @@
 import math
 from app.models.PlayerDAO import PlayerSqliteDAO
 from app.models.PlayerStatsDAO import PlayerStatsSqliteDAO
-
+from app.services.ScoringService import ScoringService
 
 class PlayerService:
     """
@@ -49,6 +49,9 @@ class PlayerService:
                 "defending": getattr(player, "defending", 75),
                 "physicality": getattr(player, "physicality", 75),
                 "market_value_eur": getattr(player, "market_value_eur", 20000000),
+                "weak_foot": getattr(player, "weak_foot", 3),
+                "skill_moves": getattr(player, "skill_moves", 3),
+                "player_traits": getattr(player, "player_traits", ""),
             }
 
         # URL Photo SoFIFA
@@ -151,144 +154,111 @@ class PlayerService:
 
     def search_players(self, filters, page=1, per_page=12):
         """
-        Recherche complète avec filtres multi-critères et pagination.
-        filters = {
-            'q': str, 'pos': str, 'min_ovr': int, 'min_pace': int,
-            'max_budget': int (en M€ ou €), 'max_age': int, 'league': str,
-            'playstyle': str, 'sort': str
-        }
+        Recherche par critères avec algorithme de scoring :
+        1. Filtres stricts (barrages) : poste, budget max, âge max, pied fort, championnat, recherche texte.
+        2. Calcul du match_score sur les stats cibles + bonus PlayStyle (+10).
+        3. Tri par match_score décroissant puis overall décroissant (ou autre tri choisi).
         """
-        q = (filters.get("q") or "").strip().lower()
-        pos = filters.get("pos") or "ALL"
-        min_ovr = int(filters.get("min_ovr")) if filters.get("min_ovr") else None
-        min_pace = int(filters.get("min_pace")) if filters.get("min_pace") else None
-        max_age = int(filters.get("max_age")) if filters.get("max_age") else None
-        min_potential = int(filters.get("min_potential")) if filters.get("min_potential") else None
-        min_shooting = int(filters.get("min_shooting")) if filters.get("min_shooting") else None
-        min_passing = int(filters.get("min_passing")) if filters.get("min_passing") else None
-        min_dribbling = int(filters.get("min_dribbling")) if filters.get("min_dribbling") else None
-        min_defending = int(filters.get("min_defending")) if filters.get("min_defending") else None
-        min_physicality = int(filters.get("min_physicality")) if filters.get("min_physicality") else None
-        max_budget = filters.get("max_budget")
-        league = filters.get("league") or "ALL"
-        sort_mode = filters.get("sort") or "overall_desc"
+        def _to_int(val):
+            try:
+                return int(val) if val not in (None, "", "ALL") else None
+            except (ValueError, TypeError):
+                return None
 
-        # Traitement du budget (conversion en euros si exprimé en M€)
-        if max_budget is not None and str(max_budget).isdigit():
-            val = int(max_budget)
-            if val < 500: # Valeur passée en M€ depuis le slider
-                max_budget_eur = val * 1000000
-            else:
-                max_budget_eur = val
+        q = (filters.get("q") or "").strip()
+        pos = filters.get("pos") or "ALL"
+        max_age = _to_int(filters.get("max_age"))
+        preferred_foot = (filters.get("preferred_foot") or "").strip()
+        league = filters.get("league") or "ALL"
+        playstyle = filters.get("playstyle") or "ALL"
+        sort_mode = filters.get("sort") or "score_desc"
+
+        # Traitement du budget (conversion M€ -> € si slider < 500, et 150 = illimité)
+        raw_budget = _to_int(filters.get("max_budget"))
+        if raw_budget is not None and raw_budget < 150:
+            max_budget_eur = raw_budget * 1_000_000
+        elif raw_budget is not None and raw_budget >= 500:
+            max_budget_eur = raw_budget
         else:
             max_budget_eur = None
 
-        position_param = None if pos == "ALL" else pos
-
+        # 1. Extraction des candidats via filtres stricts
         try:
-            # Si une recherche par nom est demandée
-            if q:
-                results = self.player_dao.findByNameSubword(q)
-            else:
-                results = self.player_dao.findByCriteria(
-                    position=position_param,
-                    min_overall=min_ovr,
-                    max_age=max_age,
-                    max_budget=max_budget_eur,
-                    min_pace=min_pace
+            candidates = self.player_dao.findCandidatesForScoring(
+                q=q or None,
+                position=pos,
+                max_budget=max_budget_eur,
+                max_age=max_age if (max_age is not None and max_age < 38) else None,
+                preferred_foot=preferred_foot or None,
+                league=league,
+                min_overall=_to_int(filters.get("min_ovr")),  # <-- Nouveau paramètre
+            )
+        except Exception as e:
+            import traceback
+            print("ERREUR SCORING DAO :", e)
+            traceback.print_exc()
+            candidates = []
+
+        # 2. Construction des cibles de stats pour le scoring
+        cibles_stats = {
+            "overall": _to_int(filters.get("min_ovr")),
+            "potential": _to_int(filters.get("min_potential")),
+            "pace": _to_int(filters.get("min_pace")),
+            "shooting": _to_int(filters.get("min_shooting")),
+            "passing": _to_int(filters.get("min_passing")),
+            "dribbling": _to_int(filters.get("min_dribbling")),
+            "defending": _to_int(filters.get("min_defending")),
+            "physicality": _to_int(filters.get("min_physicality")),
+            "weak_foot": _to_int(filters.get("weak_foot")),
+            "skill_moves": _to_int(filters.get("skill_moves")),
+        }
+        # On ne garde que les critères réellement renseignés
+        cibles_stats = {k: v for k, v in cibles_stats.items() if v is not None}
+
+        traits_souhaites = [playstyle] if playstyle and playstyle != "ALL" else []
+
+        # 3. Calcul du score pour chaque candidat
+        for joueur in candidates:
+            if cibles_stats or traits_souhaites:
+                joueur["match_score"] = ScoringService.calculer_score(
+                    joueur, cibles_stats, traits_souhaites
                 )
-        except Exception:
-            results = []
+            else:
+                joueur["match_score"] = None
 
-        # Filtrage en mémoire supplémentaire si nécessaire (ex: ligue, q combiné)
-        filtered = []
-        for p in results:
-            if position_param and getattr(p, "position", "") != position_param:
-                continue
-            if min_ovr and getattr(p, "overall", 0) < min_ovr:
-                continue
-            if min_pace and getattr(p, "pace", 0) < min_pace:
-                continue
-            if min_potential and getattr(p, "potential", 0) < min_potential:
-                continue
-            if min_shooting and getattr(p, "shooting", 0) < min_shooting:
-                continue
-            if min_passing and getattr(p, "passing", 0) < min_passing:
-                continue
-            if min_dribbling and getattr(p, "dribbling", 0) < min_dribbling:
-                continue
-            if min_defending and getattr(p, "defending", 0) < min_defending:
-                continue
-            if min_physicality and getattr(p, "physicality", 0) < min_physicality:
-                continue
-            if max_age and getattr(p, "age", 0) > max_age:
-                continue
-            if max_budget_eur and getattr(p, "market_value_eur", 0) > max_budget_eur:
-                continue
-            if league and league != "ALL":
-                p_club = getattr(p, "club", "")
-                # Si le club ou la ligue ne matche pas
-                if hasattr(p, "league") and p.league and p.league != league:
-                    continue
-
-            filtered.append(p)
-
-        # Tri
+        # 4. Tri
         if sort_mode == "pace_desc":
-            filtered.sort(key=lambda x: getattr(x, "pace", 0) or 0, reverse=True)
+            candidates.sort(key=lambda x: (x.get("pace") or 0, x.get("overall") or 0), reverse=True)
         elif sort_mode == "price_asc":
-            filtered.sort(key=lambda x: getattr(x, "market_value_eur", 0) or 0)
+            candidates.sort(key=lambda x: x.get("market_value_eur") if x.get("market_value_eur") is not None else float("inf"))
         elif sort_mode == "price_desc":
-            filtered.sort(key=lambda x: getattr(x, "market_value_eur", 0) or 0, reverse=True)
+            candidates.sort(key=lambda x: x.get("market_value_eur") or 0, reverse=True)
         elif sort_mode == "potential_desc":
-            filtered.sort(key=lambda x: getattr(x, "potential", 0) or 0, reverse=True)
+            candidates.sort(key=lambda x: (x.get("potential") or 0, x.get("overall") or 0), reverse=True)
+        elif sort_mode == "overall_desc":
+            candidates.sort(key=lambda x: x.get("overall") or 0, reverse=True)
         else:
-            # overall_desc par défaut
-            filtered.sort(key=lambda x: getattr(x, "overall", 0) or 0, reverse=True)
+            # score_desc par défaut : score décroissant, puis overall pour départager
+            candidates.sort(
+                key=lambda x: (
+                    x.get("match_score") if x.get("match_score") is not None else -9999,
+                    x.get("overall") or 0,
+                ),
+                reverse=True,
+            )
 
-        total_count = len(filtered)
+        total_count = len(candidates)
         total_pages = max(1, math.ceil(total_count / per_page))
         current_page = max(1, min(page, total_pages))
 
         start_idx = (current_page - 1) * per_page
         end_idx = start_idx + per_page
-        paged_list = [self._format_player(p) for p in filtered[start_idx:end_idx]]
+        paged_list = [self._format_player(p) for p in candidates[start_idx:end_idx]]
 
         return {
             "players": paged_list,
             "total_count": total_count,
             "page": current_page,
             "total_pages": total_pages,
-            "per_page": per_page
+            "per_page": per_page,
         }
-
-    def get_similar_players(self, player, limit=4):
-        """Trouve des joueurs similaires en poste et niveau général"""
-        if not player:
-            return []
-        
-        pos = player.get("position") if isinstance(player, dict) else getattr(player, "position", "CM")
-        ovr = player.get("overall") if isinstance(player, dict) else getattr(player, "overall", 80)
-        current_id = player.get("sofifa_id") if isinstance(player, dict) else getattr(player, "sofifa_id", 0)
-
-        try:
-            candidates = self.player_dao.findByCriteria(
-                position=pos,
-                min_overall=max(70, ovr - 4)
-            )
-            similar = []
-            for c in candidates:
-                if c.sofifa_id != current_id:
-                    similar.append(self._format_player(c))
-                    if len(similar) >= limit:
-                        break
-            return similar
-        except Exception:
-            return []
-
-    def get_total_count(self):
-        """Retourne le nombre total de joueurs enregistrés"""
-        try:
-            return self.player_dao.getNumberOfElements()
-        except Exception:
-            return 18405

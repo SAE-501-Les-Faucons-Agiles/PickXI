@@ -11,3 +11,4 @@ database/*.db-shm
 
 data/*.csv
 data/transfermarkt/*.csv
+.DS_Store

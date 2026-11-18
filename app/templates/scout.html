@@ -84,7 +84,7 @@
                    name="q" 
                    class="input-control" 
                    placeholder="Ex: Valverde, Real Madrid, France..." 
-                   value="{{ current_filters.query or '' }}">
+                   value="{{ current_filters.q or '' }}">
           </div>
 
           <!-- Poste -->
@@ -97,9 +97,9 @@
                          name="pos" 
                          value="{{ pos }}" 
                          style="display: none;" 
-                         {% if (current_filters.position == pos) or (not current_filters.position and pos == 'ALL') %}checked{% endif %}
+                         {% if (current_filters.pos == pos) or (not current_filters.pos and pos == 'ALL') %}checked{% endif %}
                          onchange="this.form.submit()">
-                  <span class="prompt-pill {% if (current_filters.position == pos) or (not current_filters.position and pos == 'ALL') %}active{% endif %}" 
+                  <span class="prompt-pill {% if (current_filters.pos == pos) or (not current_filters.position and pos == 'ALL') %}active{% endif %}" 
                         style="display: inline-block; padding: 4px 10px; font-size: 0.75rem;">
                     {{ pos }}
                   </span>
@@ -113,7 +113,7 @@
             <div class="form-label">
               <span>Note générale min</span>
               <span id="labelMinOvr" style="color: var(--accent-mint); font-family: var(--font-mono);">
-                {{ current_filters.min_overall or 80 }}+
+                {{ current_filters.min_ovr or 80 }}+
               </span>
             </div>
             <input type="range" 
@@ -121,7 +121,7 @@
                    class="range-slider" 
                    min="70" 
                    max="94" 
-                   value="{{ current_filters.min_overall or 80 }}" 
+                   value="{{ current_filters.min_ovr or 80 }}" 
                    data-target="labelMinOvr"
                    data-suffix="+">
           </div>
@@ -160,6 +160,95 @@
                    max="96" 
                    value="{{ current_filters.min_pace or 75 }}" 
                    data-target="labelMinPace"
+                   data-suffix="+">
+          </div>
+          <!-- Tir cible (SHO) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Tir cible (SHO)</span>
+              <span id="labelMinSho" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.min_shooting or 70 }}+
+              </span>
+            </div>
+            <input type="range"
+                   name="min_shooting"
+                   class="range-slider"
+                   min="40"
+                   max="94"
+                   value="{{ current_filters.min_shooting or 70 }}"
+                   data-target="labelMinSho"
+                   data-suffix="+">
+          </div>
+
+          <!-- Passe cible (PAS) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Passe cible (PAS)</span>
+              <span id="labelMinPas" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.min_passing or 70 }}+
+              </span>
+            </div>
+            <input type="range"
+                   name="min_passing"
+                   class="range-slider"
+                   min="40"
+                   max="94"
+                   value="{{ current_filters.min_passing or 70 }}"
+                   data-target="labelMinPas"
+                   data-suffix="+">
+          </div>
+
+          <!-- Dribble cible (DRI) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Dribble cible (DRI)</span>
+              <span id="labelMinDri" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.min_dribbling or 75 }}+
+              </span>
+            </div>
+            <input type="range"
+                   name="min_dribbling"
+                   class="range-slider"
+                   min="40"
+                   max="96"
+                   value="{{ current_filters.min_dribbling or 75 }}"
+                   data-target="labelMinDri"
+                   data-suffix="+">
+          </div>
+
+          <!-- Défense cible (DEF) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Défense cible (DEF)</span>
+              <span id="labelMinDef" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.min_defending or 50 }}+
+              </span>
+            </div>
+            <input type="range"
+                   name="min_defending"
+                   class="range-slider"
+                   min="30"
+                   max="94"
+                   value="{{ current_filters.min_defending or 50 }}"
+                   data-target="labelMinDef"
+                   data-suffix="+">
+          </div>
+
+          <!-- Physique cible (PHY) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Physique cible (PHY)</span>
+              <span id="labelMinPhy" style="color: var(--accent-mint); font-family: var(--font-mono);">
+                {{ current_filters.min_physicality or 70 }}+
+              </span>
+            </div>
+            <input type="range"
+                   name="min_physicality"
+                   class="range-slider"
+                   min="40"
+                   max="94"
+                   value="{{ current_filters.min_physicality or 70 }}"
+                   data-target="labelMinPhy"
                    data-suffix="+">
           </div>
 
@@ -266,6 +355,8 @@
               <option value="price_asc" {% if current_filters.sort == 'price_asc' %}selected{% endif %}>Prix le plus bas d'abord</option>
               <option value="price_desc" {% if current_filters.sort == 'price_desc' %}selected{% endif %}>Prix le plus haut d'abord</option>
               <option value="potential_desc" {% if current_filters.sort == 'potential_desc' %}selected{% endif %}>Potentiel</option>
+              <option value="score_desc" {% if current_filters.sort == 'score_desc' or not current_filters.sort %}selected{% endif %}>Meilleur score (Match)</option>
+              <option value="overall_desc" {% if current_filters.sort == 'overall_desc' %}selected{% endif %}>Note générale décroissante</option>
             </select>
           </div>
 
@@ -316,7 +407,7 @@
           {% if total_pages and total_pages > 1 %}
             <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 50px;">
               {% if page > 1 %}
-                <a href="/scout?page={{ page - 1 }}&q={{ current_filters.query or '' }}&pos={{ current_filters.position or '' }}&sort={{ current_filters.sort or '' }}" class="btn btn-secondary btn-sm">
+                <a href="/scout?page={{ page - 1 }}&q={{ current_filters.q or '' }}&pos={{ current_filters.pos or '' }}&sort={{ current_filters.sort or '' }}" class="btn btn-secondary btn-sm">
                   ← Précédent
                 </a>
               {% endif %}
@@ -326,7 +417,7 @@
               </span>
 
               {% if page < total_pages %}
-                <a href="/scout?page={{ page + 1 }}&q={{ current_filters.query or '' }}&pos={{ current_filters.position or '' }}&sort={{ current_filters.sort or '' }}" class="btn btn-secondary btn-sm">
+                <a href="/scout?page={{ page + 1 }}&q={{ current_filters.q or '' }}&pos={{ current_filters.pos or '' }}&sort={{ current_filters.sort or '' }}" class="btn btn-secondary btn-sm">
                   Suivant →
                 </a>
               {% endif %}

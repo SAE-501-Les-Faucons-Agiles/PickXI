@@ -24,3 +24,7 @@ class Player:
 
         self.market_value_eur = dico["market_value_eur"]
         self.market_value_date = dico["market_value_date"]
+
+        self.weak_foot = dico.get("weak_foot")
+        self.skill_moves = dico.get("skill_moves")
+        self.player_traits = dico.get("player_traits")
