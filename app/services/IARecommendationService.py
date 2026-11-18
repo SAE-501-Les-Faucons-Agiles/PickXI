@@ -27,7 +27,8 @@ def recommander(description: str, avec_explications=True):
         edition="FC26",
         position=criteres.position,
         max_age=criteres.max_age,
-        max_budget=criteres.max_budget
+        max_budget=criteres.max_budget,
+        limit=100
     )
 
     # 3. Filtrer selon l'âge minimum

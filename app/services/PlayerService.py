@@ -151,14 +151,10 @@ class PlayerService:
 
     def search_players(self, filters, page=1, per_page=12):
         """
-        Recherche complète avec filtres multi-critères et pagination.
-        filters = {
-            'q': str, 'pos': str, 'min_ovr': int, 'min_pace': int,
-            'max_budget': int (en M€ ou €), 'max_age': int, 'league': str,
-            'playstyle': str, 'sort': str
-        }
+        Recherche complète avec filtres multi-critères et pagination optimisée par l'ORM.
+        Les requêtes sont limitées à per_page (12 par défaut) au niveau de la base de données.
         """
-        q = (filters.get("q") or "").strip().lower()
+        q = (filters.get("q") or "").strip()
         pos = filters.get("pos") or "ALL"
         min_ovr = int(filters.get("min_ovr")) if filters.get("min_ovr") else None
         min_pace = int(filters.get("min_pace")) if filters.get("min_pace") else None
@@ -170,13 +166,12 @@ class PlayerService:
         min_defending = int(filters.get("min_defending")) if filters.get("min_defending") else None
         min_physicality = int(filters.get("min_physicality")) if filters.get("min_physicality") else None
         max_budget = filters.get("max_budget")
-        league = filters.get("league") or "ALL"
         sort_mode = filters.get("sort") or "overall_desc"
 
         # Traitement du budget (conversion en euros si exprimé en M€)
         if max_budget is not None and str(max_budget).isdigit():
             val = int(max_budget)
-            if val < 500: # Valeur passée en M€ depuis le slider
+            if val < 500:
                 max_budget_eur = val * 1000000
             else:
                 max_budget_eur = val
@@ -184,75 +179,56 @@ class PlayerService:
             max_budget_eur = None
 
         position_param = None if pos == "ALL" else pos
+        search_name = q if q else None
 
+        # Calcul du nombre total d'éléments correspondant aux filtres
         try:
-            # Si une recherche par nom est demandée
-            if q:
-                results = self.player_dao.findByNameSubword(q)
-            else:
-                results = self.player_dao.findByCriteria(
-                    position=position_param,
-                    min_overall=min_ovr,
-                    max_age=max_age,
-                    max_budget=max_budget_eur,
-                    min_pace=min_pace
-                )
+            total_count = self.player_dao.countByCriteria(
+                edition="FC26",
+                position=position_param,
+                min_overall=min_ovr,
+                max_age=max_age,
+                max_budget=max_budget_eur,
+                min_pace=min_pace,
+                min_potential=min_potential,
+                min_shooting=min_shooting,
+                min_passing=min_passing,
+                min_dribbling=min_dribbling,
+                min_defending=min_defending,
+                min_physicality=min_physicality,
+                name=search_name
+            )
+        except Exception:
+            total_count = 0
+
+        total_pages = max(1, math.ceil(total_count / per_page))
+        current_page = max(1, min(page, total_pages))
+        offset = (current_page - 1) * per_page
+
+        # Récupération limitée aux 12 joueurs demandés via l'ORM
+        try:
+            results = self.player_dao.findByCriteria(
+                edition="FC26",
+                position=position_param,
+                min_overall=min_ovr,
+                max_age=max_age,
+                max_budget=max_budget_eur,
+                min_pace=min_pace,
+                min_potential=min_potential,
+                min_shooting=min_shooting,
+                min_passing=min_passing,
+                min_dribbling=min_dribbling,
+                min_defending=min_defending,
+                min_physicality=min_physicality,
+                name=search_name,
+                sort=sort_mode,
+                limit=per_page,
+                offset=offset
+            )
         except Exception:
             results = []
 
-        # Filtrage en mémoire supplémentaire si nécessaire (ex: ligue, q combiné)
-        filtered = []
-        for p in results:
-            if position_param and getattr(p, "position", "") != position_param:
-                continue
-            if min_ovr and getattr(p, "overall", 0) < min_ovr:
-                continue
-            if min_pace and getattr(p, "pace", 0) < min_pace:
-                continue
-            if min_potential and getattr(p, "potential", 0) < min_potential:
-                continue
-            if min_shooting and getattr(p, "shooting", 0) < min_shooting:
-                continue
-            if min_passing and getattr(p, "passing", 0) < min_passing:
-                continue
-            if min_dribbling and getattr(p, "dribbling", 0) < min_dribbling:
-                continue
-            if min_defending and getattr(p, "defending", 0) < min_defending:
-                continue
-            if min_physicality and getattr(p, "physicality", 0) < min_physicality:
-                continue
-            if max_age and getattr(p, "age", 0) > max_age:
-                continue
-            if max_budget_eur and getattr(p, "market_value_eur", 0) > max_budget_eur:
-                continue
-            if league and league != "ALL":
-                p_club = getattr(p, "club", "")
-                # Si le club ou la ligue ne matche pas
-                if hasattr(p, "league") and p.league and p.league != league:
-                    continue
-
-            filtered.append(p)
-
-        # Tri
-        if sort_mode == "pace_desc":
-            filtered.sort(key=lambda x: getattr(x, "pace", 0) or 0, reverse=True)
-        elif sort_mode == "price_asc":
-            filtered.sort(key=lambda x: getattr(x, "market_value_eur", 0) or 0)
-        elif sort_mode == "price_desc":
-            filtered.sort(key=lambda x: getattr(x, "market_value_eur", 0) or 0, reverse=True)
-        elif sort_mode == "potential_desc":
-            filtered.sort(key=lambda x: getattr(x, "potential", 0) or 0, reverse=True)
-        else:
-            # overall_desc par défaut
-            filtered.sort(key=lambda x: getattr(x, "overall", 0) or 0, reverse=True)
-
-        total_count = len(filtered)
-        total_pages = max(1, math.ceil(total_count / per_page))
-        current_page = max(1, min(page, total_pages))
-
-        start_idx = (current_page - 1) * per_page
-        end_idx = start_idx + per_page
-        paged_list = [self._format_player(p) for p in filtered[start_idx:end_idx]]
+        paged_list = [self._format_player(p) for p in results]
 
         return {
             "players": paged_list,

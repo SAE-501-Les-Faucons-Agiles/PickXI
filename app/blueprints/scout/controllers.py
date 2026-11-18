@@ -80,7 +80,7 @@ def api_search():
         'min_physicality': request.args.get('min_physicality')
     }
 
-    result = player_service.search_players(filters, page=page, per_page=20)
+    result = player_service.search_players(filters, page=page, per_page=12)
     return jsonify(result)
 
 
