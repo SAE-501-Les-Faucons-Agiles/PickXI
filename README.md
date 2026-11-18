@@ -48,3 +48,12 @@ Pour la relancer :
 ```bash
 docker compose up -d
 ```
+
+## État du projet
+
+Cette partie est destinée à faire un rapide résumé de l'état du projet et de nos pistes de réflexion lors du premier rendu, le 18 novembre.
+
+- Le premier algorithme « score » est fonctionnel, mais nous réfléchissons déjà à certaines optimisations.
+- L'algorithme IA est partiellement fonctionnel. Nous envisageons d'utiliser le même système de critères que le premier algorithme à la place du chatbot, tout en continuant d'utiliser l'IA pour produire un résultat.
+- Certains éléments visuels vont être améliorés.
+- La partie terrain n'est actuellement que partiellement fonctionnelle, mais nous pensons que c'est un bon ajout au site.
